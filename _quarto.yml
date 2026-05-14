@@ -1,0 +1,80 @@
+project:
+  type: website
+  output-dir: _site
+
+filters:
+  - filters/render-data-model.lua
+
+execute:
+  eval: false
+  warning: false
+
+format:
+  html:
+    theme:
+      light: cosmo
+      dark: darkly
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    css: styles.css
+
+bibliography: references.bib
+
+website:
+  title: "DAS Metadata"
+  site-url: "https://dasdae.github.io/das_metadata"
+  repo-url: "https://github.com/DASDAE/das_metadata"
+  page-navigation: true
+  navbar:
+    background: light
+    search: true
+    left:
+      - text: "Intro"
+        href: index.qmd
+      - text: "Scenarios"
+        href: scenarios/index.qmd
+      - text: "API"
+        href: api/index.qmd
+    right:
+      - icon: github
+        href: "https://github.com/DASDAE/dascore"
+        aria-label: "DASCore GitHub"
+  sidebar:
+    - id: intro
+      title: "Intro"
+      style: "floating"
+      collapse-level: 2
+      contents:
+        - text: "Overview"
+          href: index.qmd
+        - text: "Model At A Glance"
+          href: intro/model.qmd
+        - text: "Standards Context"
+          href: intro/standards.qmd
+    - id: scenarios
+      title: "Scenarios"
+      style: "floating"
+      collapse-level: 2
+      contents:
+        - text: "Overview"
+          href: scenarios/index.qmd
+        - text: "Sidecar Inventory"
+          href: scenarios/sidecar.qmd
+        - text: "Patch Enrichment"
+          href: scenarios/enrichment.qmd
+        - text: "Geometry And Coupling"
+          href: scenarios/geometry-coupling.qmd
+        - text: "Revisions Over Time"
+          href: scenarios/revisions.qmd
+    - id: api
+      title: "API"
+      style: "floating"
+      collapse-level: 2
+      contents:
+        - text: "Conceptual API"
+          href: api/index.qmd
+        - text: "Manifest Shape"
+          href: api/manifest.qmd
+        - text: "Object Reference"
+          href: api/objects.qmd

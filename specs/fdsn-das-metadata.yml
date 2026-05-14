@@ -1,0 +1,205 @@
+id: fdsn-das-metadata
+title: FDSN DAS Metadata
+direction: TB
+reference_label: references
+nodes:
+  Overview:
+    label: Overview metadata
+    display: Overview
+    summary: Experiment, network, location, dates, provider, and deployment context.
+    attributes:
+      - name: experiment_id
+        type: str
+        description: Unique identifier for the experiment or deployment.
+      - name: network_code
+        type: str
+        description: Network or archive code.
+      - name: location_code
+        type: str
+        description: Location or deployment code.
+      - name: time_range
+        type: datetime interval
+        description: Start and end dates for the described metadata.
+      - name: provider
+        type: str
+        description: Data provider or responsible archive.
+  PI:
+    label: Principal investigators
+    display: PIs
+    summary: People or organizations responsible for the observing campaign.
+    attributes:
+      - name: name
+        type: str
+        description: Person or organization name.
+      - name: affiliation
+        type: str
+        description: Institution or organization.
+      - name: role
+        type: str
+        description: Responsibility in the experiment.
+      - name: contact
+        type: str
+        description: Email or other contact detail.
+      - name: identifier
+        type: str
+        description: ORCID or organization identifier.
+  Interrogators:
+    label: Interrogators
+    summary: DAS instrument identity and hardware/software configuration.
+    attributes:
+      - name: manufacturer
+        type: str
+        description: Instrument manufacturer.
+      - name: model
+        type: str
+        description: Instrument model.
+      - name: serial_number
+        type: str
+        description: Manufacturer serial number.
+      - name: software_version
+        type: str
+        description: Firmware or acquisition software version.
+      - name: timing_source
+        type: str
+        description: Clock or timing reference.
+  Cables:
+    label: Cables
+    summary: Installed cable description and cable-level properties.
+    attributes:
+      - name: cable_id
+        type: str
+        description: Unique cable identifier.
+      - name: cable_type
+        type: str
+        description: Cable construction or product class.
+      - name: installation_method
+        type: str
+        description: Buried, surface-laid, conduit, borehole, or other method.
+      - name: length
+        type: float
+        description: Cable length.
+      - name: route_description
+        type: str
+        description: Textual route or deployment description.
+  Acquisition:
+    label: Data acquisitions
+    display: Acquisitions
+    summary: Acquisition settings and timing used to produce a data set.
+    attributes:
+      - name: acquisition_id
+        type: str
+        description: Unique acquisition identifier.
+      - name: time_range
+        type: datetime interval
+        description: Acquisition start and end time.
+      - name: sample_rate
+        type: float
+        description: Temporal sampling rate.
+      - name: gauge_length
+        type: float
+        description: DAS gauge length.
+      - name: channel_spacing
+        type: float
+        description: Distance between adjacent channels.
+      - name: data_units
+        type: str
+        description: Units of the recorded values.
+  Headers:
+    label: Native headers
+    display: Headers
+    summary: Selected vendor or instrument header fields preserved with the standardized record.
+    attributes:
+      - name: name
+        type: str
+        description: Header field name.
+      - name: value
+        type: Any
+        description: Header field value.
+      - name: units
+        type: str
+        description: Units, when applicable.
+      - name: source_file
+        type: str
+        description: File from which the header was read.
+      - name: namespace
+        type: str
+        description: Vendor or instrument namespace.
+  ChannelGroup:
+    label: Channel groups
+    display: Channel groups
+    summary: Shared metadata for a group of DAS channels.
+    attributes:
+      - name: group_id
+        type: str
+        description: Unique group identifier.
+      - name: channel_range
+        type: tuple[int, int]
+        description: First and last channel represented by the group.
+      - name: distance_units
+        type: str
+        description: Units for channel distances.
+      - name: coordinate_frame
+        type: str
+        description: Spatial reference used by the group.
+      - name: cable_ref
+        type: str
+        description: Referenced cable identifier.
+      - name: fiber_ref
+        type: str
+        description: Referenced fiber identifier.
+  Channel:
+    label: Channels
+    summary: Per-channel identity and spatial metadata.
+    attributes:
+      - name: channel_id
+        type: str
+        description: Unique channel identifier.
+      - name: index
+        type: int
+        description: Channel or sample index.
+      - name: distance
+        type: float
+        description: Optical or channel distance.
+      - name: latitude
+        type: float
+        description: Geographic latitude.
+      - name: longitude
+        type: float
+        description: Geographic longitude.
+      - name: elevation
+        type: float
+        description: Elevation or vertical position.
+      - name: orientation
+        type: tuple[float, float]
+        description: Strike/azimuth and dip, when known.
+  Fiber:
+    label: Fibers
+    summary: Fiber identity and optical properties within a cable.
+    attributes:
+      - name: fiber_id
+        type: str
+        description: Unique fiber identifier.
+      - name: fiber_type
+        type: str
+        description: Fiber class or product type.
+      - name: refractive_index
+        type: float
+        description: Effective refractive index.
+      - name: optical_length
+        type: float
+        description: Optical length of the fiber.
+      - name: attenuation
+        type: float
+        description: Attenuation value, when known.
+edges:
+  - [Overview, PI]
+  - [Overview, Interrogators]
+  - [Overview, Cables]
+  - [Interrogators, Acquisition]
+  - [Acquisition, Headers]
+  - [Acquisition, ChannelGroup]
+  - [ChannelGroup, Channel]
+  - [Cables, Fiber]
+references:
+  - [ChannelGroup, Cables]
+  - [ChannelGroup, Fiber]

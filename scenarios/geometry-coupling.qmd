@@ -1,0 +1,46 @@
+---
+title: "Geometry And Coupling"
+sidebar: scenarios
+---
+
+Geometry and coupling are separate optical-distance tracks because their boundaries rarely align exactly.
+
+## Proposal Sketch
+
+```python
+optical_path = inv.OpticalPath(
+    name="Garden path",
+    optical_components=(
+        inv.FiberSegment(name="lead-in", optical_length=50.0),
+        inv.FiberSegment(name="sensing fiber", optical_length=720.0),
+    ),
+    geometries=(
+        inv.Geometry(
+            optical_length=300.0,
+            coordinates=((0.0, 0.0, 0.0), (300.0, 0.0, 0.0)),
+        ),
+        inv.Geometry(
+            optical_length=420.0,
+            coordinates=((300.0, 0.0, 0.0), (720.0, 80.0, 0.0)),
+        ),
+    ),
+    coupling_conditions=(
+        inv.CouplingCondition(optical_length=470.0, coupling_type="trench"),
+        inv.CouplingCondition(optical_length=300.0, coupling_type="surface"),
+    ),
+)
+```
+
+The component, geometry, and coupling tracks can have different interval lengths and boundaries while still describing the same optical path.
+
+## Projection
+
+```python
+patch = patch.add_inventory_coords(
+    inventory,
+    coords=("x", "y", "z", "coupling_type", "label"),
+)
+```
+
+Projection turns inventory context into patch coordinates only when analysis needs those arrays.
+

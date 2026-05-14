@@ -1,0 +1,50 @@
+---
+title: "Object Reference"
+sidebar: api
+---
+
+This is a conceptual reference for the proposed model objects.
+
+| Object | Role |
+|---|---|
+| `Inventory` | Top-level catalog, manifest envelope, validation boundary, and replacement entrypoint. |
+| `CreationInfo` | Provenance for the inventory document. |
+| `Network` | FDSN-like organization level containing fiber arrays. |
+| `FiberArray` | Station-like identity for an extended fiber observing system. |
+| `Acquisition` | Time-aware acquisition setup and channel-to-distance context. |
+| `Interrogator` | DAS interrogator hardware metadata. |
+| `OpticalPath` | Ordered optical-distance path with parallel metadata tracks. |
+| `FiberSegment` | Fiber interval within an optical path. |
+| `Connector`, `Splice`, `Coupler`, `Turnaround`, `Terminator` | Common optical components. |
+| `Geometry` | Coordinates along an optical-distance interval. |
+| `CoordinateReferenceSystem` | CRS shared by path geometries. |
+| `CouplingCondition` | Acoustic coupling context along an interval. |
+| `OpticalPathAnnotation` | Label or category over a path distance range. |
+| `Cable` | Reusable physical cable metadata. |
+| `ExternalResource` | Reference to external documents, registries, product pages, or specifications. |
+
+## Minimal Object Graph
+
+```{mermaid}
+flowchart LR
+  Interrogator --> Acquisition
+  Cable --> FiberSegment
+  CRS[CoordinateReferenceSystem] --> Geometry
+  FiberSegment --> OpticalPath
+  Geometry --> OpticalPath
+  CouplingCondition --> OpticalPath
+  Acquisition --> FiberArray
+  OpticalPath --> FiberArray
+  FiberArray --> Network
+  Network --> Inventory
+```
+
+## Naming Conventions
+
+The proposal favors domain names that are useful in analysis:
+
+- `FiberArray` instead of stretching point-station terminology over an extended aperture.
+- `Acquisition` for channel-like acquisition context.
+- `OpticalPath` for the ordered path followed by light.
+- `data_source_id` for the patch-to-inventory join key.
+

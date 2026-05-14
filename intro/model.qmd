@@ -1,0 +1,52 @@
+---
+title: "Model At A Glance"
+sidebar: intro
+---
+
+The FAS Inventory model describes the observing system around a patch without making that full context part of every patch.
+
+## Inventory Tree
+
+```{mermaid}
+flowchart TB
+  Inventory --> Resources
+  Inventory --> Networks
+  Networks --> Network
+  Network --> FiberArray
+  FiberArray --> Acquisition
+  FiberArray --> OpticalPath
+  OpticalPath --> OpticalComponents
+  OpticalPath --> Geometries
+  OpticalPath --> CouplingConditions
+  OpticalPath --> OpticalPathAnnotations
+```
+
+`Inventory`, `Network`, and `FiberArray` provide the organizational path. `Acquisition` describes how the data were produced. `OpticalPath` describes the fiber path in optical distance.
+
+## Patch Linkage
+
+Patches do not directly embed the inventory. They carry a `data_source_id`:
+
+```text
+network.fiber_array.location.acquisition
+```
+
+That identifier resolves the relevant `FiberArray` and `Acquisition` for a patch time. This makes a patch portable and keeps large or revised inventory context outside the patch until a user explicitly asks to add it.
+
+## Parallel Optical-Path Tracks
+
+An optical path has independent interval tracks:
+
+- Optical components describe fiber, connectors, splices, couplers, turnarounds, and terminators.
+- Geometry describes physical coordinates along optical distance.
+- Coupling conditions describe how the fiber is acoustically coupled.
+- Annotations describe named or categorized intervals.
+
+These tracks are independent because their boundaries often differ. A cable segment, trench section, geometry vertex, and quality note may all start and stop at different optical distances.
+
+## Reusable Resources
+
+Objects that can be shared across the tree use stable `resource_id` values. Examples include interrogators, cables, coordinate reference systems, external documents, and product specifications.
+
+Nested topology and interval objects do not need public resource ids in the proposal manifest. They can receive runtime identities when loaded so tools can replace revised objects without exposing storage addresses to users.
+

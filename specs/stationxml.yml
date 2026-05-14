@@ -1,0 +1,144 @@
+id: stationxml
+title: StationXML
+direction: LR
+nodes:
+  Inventory:
+    label: Inventory
+    summary: Top-level StationXML document containing one or more FDSN network metadata records.
+    attributes:
+      - name: Source
+        type: str
+        description: Organization or system that generated the metadata.
+      - name: Sender
+        type: str
+        description: Organization submitting or serving the document.
+      - name: Module
+        type: str
+        description: Name of the software module that generated the document.
+      - name: ModuleURI
+        type: str
+        description: URI identifying the generating software module, when supplied.
+      - name: Created
+        type: datetime
+        description: Time the metadata document was created.
+      - name: Network
+        type: list[Network]
+        description: Networks included in the inventory.
+  Network:
+    label: Network
+    summary: FDSN network code and metadata grouping a set of stations operated under a common network identity.
+    attributes:
+      - name: code
+        type: str
+        description: FDSN network code.
+      - name: startDate
+        type: datetime
+        description: Beginning of the network validity interval.
+      - name: endDate
+        type: datetime
+        description: End of the network validity interval, when known.
+      - name: Description
+        type: str
+        description: Human-readable network description.
+      - name: TotalNumberStations
+        type: int
+        description: Number of stations represented by the network metadata.
+      - name: Station
+        type: list[Station]
+        description: Stations belonging to the network.
+  Station:
+    label: Station
+    summary: Site-level observing identity with location, operators, creation dates, and one or more channels.
+    attributes:
+      - name: code
+        type: str
+        description: FDSN station code.
+      - name: startDate
+        type: datetime
+        description: Beginning of the station epoch.
+      - name: endDate
+        type: datetime
+        description: End of the station epoch, when known.
+      - name: Latitude
+        type: float
+        description: Station latitude in degrees.
+      - name: Longitude
+        type: float
+        description: Station longitude in degrees.
+      - name: Elevation
+        type: float
+        description: Station elevation in meters.
+      - name: Site
+        type: Site
+        description: Site name or description.
+      - name: CreationDate
+        type: datetime
+        description: Date the station was created or installed.
+      - name: TotalNumberChannels
+        type: int
+        description: Number of channels represented by the station metadata.
+      - name: Channel
+        type: list[Channel]
+        description: Channels recorded at the station.
+  Channel:
+    label: Channel
+    summary: A single time-series stream identity with location code, channel code, orientation, sampling, and instrument response.
+    attributes:
+      - name: code
+        type: str
+        description: FDSN channel code.
+      - name: locationCode
+        type: str
+        description: FDSN location code for distinguishing colocated streams.
+      - name: startDate
+        type: datetime
+        description: Beginning of the channel epoch.
+      - name: endDate
+        type: datetime
+        description: End of the channel epoch, when known.
+      - name: Latitude
+        type: float
+        description: Channel latitude in degrees.
+      - name: Longitude
+        type: float
+        description: Channel longitude in degrees.
+      - name: Elevation
+        type: float
+        description: Channel elevation in meters.
+      - name: Depth
+        type: float
+        description: Sensor depth in meters.
+      - name: Azimuth
+        type: float
+        description: Horizontal orientation in degrees clockwise from north.
+      - name: Dip
+        type: float
+        description: Vertical orientation in degrees.
+      - name: SampleRate
+        type: float
+        description: Nominal samples per second.
+      - name: Sensor
+        type: Equipment
+        description: Sensor equipment metadata.
+      - name: Response
+        type: Response
+        description: Instrument response for converting counts to physical units.
+  Response:
+    label: Response
+    display: Response
+    summary: Instrument response model for a channel, including sensitivities and one or more response stages.
+    attributes:
+      - name: InstrumentSensitivity
+        type: InstrumentSensitivity
+        description: Overall channel sensitivity and input/output units.
+      - name: InstrumentPolynomial
+        type: InstrumentPolynomial
+        description: Optional overall response polynomial.
+      - name: Stage
+        type: list[ResponseStage]
+        description: Ordered response stages such as poles-zeros, coefficients, FIR filters, or gains.
+edges:
+  - [Inventory, Network]
+  - [Network, Station]
+  - [Station, Channel]
+  - [Channel, Response]

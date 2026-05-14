@@ -1,0 +1,67 @@
+---
+title: "Manifest Shape"
+sidebar: api
+---
+
+The serialized proposal manifest is intended to be nested and human-editable.
+
+## Envelope
+
+```yaml
+format: fas_inventory
+schema_version: 1
+resource_id: example_inventory
+creation_info:
+  agency_id: EXAMPLE
+  author: Field Team
+  creation_time: 2026-06-01T00:00:00
+  update_time: 2026-06-10T00:00:00
+  version: "2"
+comment: Working inventory for a field deployment.
+resources: {}
+networks: []
+```
+
+## Resource Pattern
+
+Reusable resources are keyed by `resource_id`:
+
+```yaml
+resources:
+  local_cartesian:
+    type: CoordinateReferenceSystem
+    authority: LOCAL
+    code: garden_grid
+    axis_order: [x, y, z]
+    units: m
+  interrogator_1:
+    type: Interrogator
+    manufacturer: Example Instruments
+    model: DAS-1000
+```
+
+## Nested Path Pattern
+
+Topology and path intervals are nested where they are used:
+
+```yaml
+networks:
+  - code: XX
+    fiber_arrays:
+      - code: GARDEN
+        optical_paths:
+          - name: Garden path
+            crs: local_cartesian
+            optical_components:
+              - type: FiberSegment
+                name: sensing fiber
+                optical_length: 720.0
+            coupling_conditions:
+              - optical_length: 470.0
+                coupling_type: trench
+              - optical_length: 250.0
+                coupling_type: surface
+```
+
+The runtime implementation can index this nested graph internally without exposing those implementation details in the manifest.
+

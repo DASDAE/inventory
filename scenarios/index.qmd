@@ -1,0 +1,27 @@
+---
+title: "Scenarios"
+sidebar: scenarios
+---
+
+The proposal is organized around practical archive and analysis workflows.
+
+## Working Archive Flow
+
+```{mermaid}
+flowchart LR
+  Files[Raw or processed DAS files] --> Patch[Patch]
+  Notes[Field notes, maps, tap tests] --> Inv[Sidecar Inventory]
+  Patch --> Resolve[data_source_id lookup]
+  Inv --> Resolve
+  Resolve --> Enriched[Enriched patch when requested]
+```
+
+The inventory can live beside field data as YAML or JSON. It can start incomplete, then gain better geometry, coupling, acquisition, or revision history as information arrives.
+
+## Scenario Pages
+
+- [Sidecar Inventory](sidecar.qmd): write a small inventory beside data files.
+- [Patch Enrichment](enrichment.qmd): resolve inventory context only when needed.
+- [Geometry And Coupling](geometry-coupling.qmd): project physical path metadata onto patch coordinates.
+- [Revisions Over Time](revisions.qmd): keep corrected metadata without losing history.
+

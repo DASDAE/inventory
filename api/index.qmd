@@ -1,0 +1,33 @@
+---
+title: "Conceptual API"
+sidebar: api
+---
+
+This API section describes the proposed user-facing concepts. It is not generated API documentation and should not be treated as a promise that every snippet runs today.
+
+## Main User Operations
+
+```python
+inventory = inv.Inventory.from_yaml("inventory.yaml")
+
+patch = patch.update_attrs(data_source_id="XX.GARDEN..RAW")
+
+patch = patch.add_inventory_attrs(inventory)
+patch = patch.add_inventory_coords(inventory, coords=("x", "y", "z", "label"))
+```
+
+## Model Responsibilities
+
+| Concept | Responsibility |
+|---|---|
+| `Inventory` | Top-level metadata catalog and serialized manifest boundary. |
+| `Network` | Organizational grouping borrowed from FDSN-style metadata. |
+| `FiberArray` | Durable fiber-optic observing identity. |
+| `Acquisition` | Interrogator configuration and channel-to-distance context. |
+| `OpticalPath` | Optical-distance path with component, geometry, coupling, and annotation tracks. |
+| `PatchAttrs` | Patch-local metadata plus `data_source_id` for inventory lookup. |
+
+## Design Rule
+
+Inventory context is copied onto a patch only by explicit user action. That keeps patches lightweight and makes metadata provenance easier to inspect.
+
