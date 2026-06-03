@@ -2,10 +2,12 @@ id: fdsn-das-metadata
 title: FDSN DAS Metadata
 direction: TB
 reference_label: references
+styles: specs/styles.yml
 nodes:
   Overview:
     label: Overview metadata
     display: Overview
+    style_class: metadata
     summary: Experiment, network, location, dates, provider, and deployment context.
     attributes:
       - name: experiment_id
@@ -24,8 +26,9 @@ nodes:
         type: str
         description: Data provider or responsible archive.
   PI:
-    label: Principal investigators
-    display: PIs
+    label: Principal investigator
+    display: PI
+    style_class: metadata
     summary: People or organizations responsible for the observing campaign.
     attributes:
       - name: name
@@ -44,7 +47,9 @@ nodes:
         type: str
         description: ORCID or organization identifier.
   Interrogators:
-    label: Interrogators
+    label: Interrogator
+    shape: square
+    style_class: instrument
     summary: DAS instrument identity and hardware/software configuration.
     attributes:
       - name: manufacturer
@@ -63,7 +68,8 @@ nodes:
         type: str
         description: Clock or timing reference.
   Cables:
-    label: Cables
+    label: Cable
+    style_class: shareable_resource
     summary: Installed cable description and cable-level properties.
     attributes:
       - name: cable_id
@@ -82,8 +88,9 @@ nodes:
         type: str
         description: Textual route or deployment description.
   Acquisition:
-    label: Data acquisitions
-    display: Acquisitions
+    label: Data acquisition
+    display: Acquisition
+    style_class: instrument
     summary: Acquisition settings and timing used to produce a data set.
     attributes:
       - name: acquisition_id
@@ -105,8 +112,9 @@ nodes:
         type: str
         description: Units of the recorded values.
   Headers:
-    label: Native headers
-    display: Headers
+    label: Native header
+    display: Header
+    style_class: instrument
     summary: Selected vendor or instrument header fields preserved with the standardized record.
     attributes:
       - name: name
@@ -125,8 +133,9 @@ nodes:
         type: str
         description: Vendor or instrument namespace.
   ChannelGroup:
-    label: Channel groups
-    display: Channel groups
+    label: Channel group
+    display: Channel group
+    style_class: monitoring_instrument
     summary: Shared metadata for a group of DAS channels.
     attributes:
       - name: group_id
@@ -148,7 +157,8 @@ nodes:
         type: str
         description: Referenced fiber identifier.
   Channel:
-    label: Channels
+    label: Channel
+    style_class: monitoring_instrument
     summary: Per-channel identity and spatial metadata.
     attributes:
       - name: channel_id
@@ -173,7 +183,8 @@ nodes:
         type: tuple[float, float]
         description: Strike/azimuth and dip, when known.
   Fiber:
-    label: Fibers
+    label: Fiber
+    style_class: shareable_resource
     summary: Fiber identity and optical properties within a cable.
     attributes:
       - name: fiber_id

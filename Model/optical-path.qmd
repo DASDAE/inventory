@@ -1,0 +1,37 @@
+---
+title: "OpticalPath"
+sidebar: model
+---
+
+`OpticalPath` is the ordered optical-distance axis that ties fiber metadata to DAS data. It describes the media in which the light travels as well as the corresponding geographical location, coupling conditions, and annotations. To do this, the `OpticalPath` has independent interval tracks:
+
+- [Optical components](optical-components.qmd) describe fiber, connectors, splices, and terminators.
+- [Geometry](../References/Geometry.qmd) describes physical coordinates along optical distance.
+- [Coupling conditions](../References/CouplingCondition.qmd) describe how the fiber is acoustically coupled.
+- [Annotations](../References/OpticalPathAnnotation.qmd) describe named or categorized intervals.
+
+These tracks are independent because their boundaries often differ. A cable segment, trench section, geometry vertex, and quality note may all start and stop at different optical distances. The total length of all the optical components is considered the canonical optical length.
+
+## Geometry
+
+`Geometry` objects map optical distance onto coordinates. Each object covers an `optical_length` interval and can optionally carry paired `distance` and `coordinates` arrays. The distances are measured along the optical path, and the coordinates are interpreted using the inventory CRS.
+
+When populated, `distance` and `coordinates` have the same length: each distance value is the optical-distance location of the corresponding coordinate. Coordinates between listed points are interpreted by piecewise linear interpolation in the inventory CRS. A point-like coil, slack loop, or clump can be represented by a single coordinate plus an `optical_length`; unmapped intervals can omit both `distance` and `coordinates`.
+
+Geometry should describe where the path is, not what optical material is present. That separation lets a single cable segment cross multiple mapped lines, lets an unmapped lead-in occupy optical distance without coordinates, and lets a later calibration improve the coordinate track without changing the component sequence.
+
+## Coupling Conditions
+
+`CouplingCondition` objects describe the acoustic or mechanical environment over optical-distance intervals. They capture properties such as `coupling_type`, surrounding `medium`, `attachment`, and `depth`.
+
+`coupling_type` uses a controlled vocabulary: `conduit`, `trench`, `outside_borehole_casing`, `wireline`, `surface`, `coiled`, or `other`. Use `medium` and `attachment` for more specific details such as soil, steel, loose, clamped, bonded, or direct burial.
+
+Coupling is interval metadata, so it does not need to follow component or geometry boundaries. For example, one fiber segment can include a buried trench interval, a conduit interval, and a loose surface run, each with different coupling behavior.
+
+## Annotations
+
+`OpticalPathAnnotation` objects attach labels and notes to optical-distance intervals. They are useful for names, operational zones, quality flags, field observations, and analysis regions that should travel with the path but do not belong in geometry or coupling.
+
+Annotations use a start `distance` plus `optical_length`, so they still define an interval while remaining easy to move along the path. They can overlap other tracks and each other.
+
+The [`OpticalPath` API](../API/optical-path.qmd) makes it simple to update optical paths when breaks occur, segments are added, or broken cable is bypassed.

@@ -1,0 +1,38 @@
+---
+title: "Optical Components"
+sidebar: model
+---
+
+Optical components describe the ordered physical pieces that form an `OpticalPath`. They answer the question: what does the light pass through as optical distance increases?
+
+Each component has an optical length and a component type. Components may link to a shareable resources such as `Cable` or `Enclosure` when the same physical asset needs to be described once and potentially reused. Containers can be nested in limited, explicit ways, such as a `Cable` inside an `Enclosure` with `enclosure_type="conduit"`, but a container is not itself an optical component.
+
+## Component Types
+
+The model starts with the component vocabulary DAS users usually need:
+
+- `FiberSegment` for a length of fiber inside a cable, borehole, patch cord, or other run.
+- `Connector` for a joined optical interface.
+- `Splice` for a fused or mechanical splice.
+- `Terminator` for the end of an optical path.
+
+The list is intentionally practical rather than exhaustive. Extra details can live on the component or on linked resources until the model needs a more specialized object.
+
+Turnarounds and couplers are represented as enclosure context rather than optical components. For example, a downhole enclosure with `enclosure_type="turnaround"` can contain or house the splice or connector that routes the optical path from one fiber leg into another return leg. A passive coupler assembly can be represented as `enclosure_type="coupler"`; the connectors that enter or leave that assembly can reference the same enclosure.
+
+## Containers
+
+Containers describe reusable physical assets that hold, protect, or group optical components. They are referenced from components or from other containers instead of being inserted into the ordered optical path as components themselves.
+
+- `Cable` describes the physical cable resource that contains one or more fiber segments. A `FiberSegment` can reference a cable when the segment is a specific fiber or interval inside that cable.
+- `Enclosure` describes a housing, assembly, pipe, duct, casing, tray, or other carrier context for cables, connectors, splices, and termini. Its `enclosure_type` can classify the role of the housing, such as `splice_box`, `junction_box`, `coupler`, `turnaround`, `patch_panel`, `protective_housing`, `conduit`, `pipe`, or `duct`.
+
+Container nesting is intentionally finite: a `Cable` can be inside an `Enclosure` or a larger `Cable`; `FiberSegment` components point to a `Cable`; and connectors, splices, and termini point to an `Enclosure`.
+
+This keeps the optical sequence focused on what light passes through while still preserving brand, model, serial number, ownership, and specification metadata for the physical assets around those components.
+
+## Relationship To Other Tracks
+
+Optical components are not the geometry. A component records the physical optical sequence and optical lengths; geometry records coordinates along that sequence. Coupling records the acoustic environment, and annotations record interpretation.
+
+Keeping these tracks separate allows the model to represent incomplete field knowledge. For example, a team may know the cable and splice sequence before they know the final corrected geometry, or they may revise coupling interpretation without changing the component sequence.

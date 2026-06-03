@@ -1,0 +1,249 @@
+---
+title: "DFOS Metadata Model"
+sidebar: intro
+---
+
+This document outlines a data model for distributed fiber-optic sensing (DFOS) metadata in [DASDAE](https://dasdae.org). The purpose is to:
+
+- Flesh out a workable data model for storing DFOS metadata,
+- Define an ergonomic API that integrates with DASCore, and
+- Solicit feedback from the community.
+
+The goal is not to [proliferate a new standard](https://xkcd.com/927/), as we tentatively plan to support other standards as export targets, but rather to develop an elegant and comprehensive metadata management story for DASDAE.
+
+::: {.proposal-note}
+This site is a proposal. Code snippets are illustrative sketches and are not expected to run against current DASCore versions.
+:::
+
+## Why not X?
+
+Managing DFOS metadata is a significant challenge, and there are many different approaches. Before introducing the DASDAE model, we must examine these approaches and highlight what is lacking in simply adopting their exact structure or approach in DASDAE.
+
+::: {.why-not-section}
+<button class="why-not-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#why-not-adhoc" aria-expanded="false" aria-controls="why-not-adhoc">Ad Hoc Archives</button>
+
+::: {#why-not-adhoc .collapse}
+
+ In many cases, ad-hoc efforts mix time-series with loosely related metadata: field notes, acquisition spreadsheets, cable diagrams, tap tests, OTDR traces, maps, and post-deployment corrections. This is particularly common for university-led research projects. The following shows an example of what this might look like.
+
+::: {.adhoc-tree}
+<pre><code><span class="tree-folder tree-root">field_campaign/</span>
+├── <span class="tree-folder tree-data">das/</span>
+│   ├── <span class="tree-file tree-file-data">2024-05-01_000000.h5</span>
+│   ├── <span class="tree-file tree-file-data">2024-05-01_010000.h5</span>
+│   └── <span class="tree-file tree-file-data">2024-05-01_020000.h5</span>
+├── <span class="tree-folder tree-notes">notes/</span>
+│   ├── <span class="tree-file tree-file-image">field_notebook_shawn.png</span>
+│   ├── <span class="tree-file tree-file-sheet">tap_tests.xlsx</span>
+│   └── <span class="tree-file tree-file-markdown">deployment_log.md</span>
+├── <span class="tree-folder tree-geometry">geometry/</span>
+│   ├── <span class="tree-file tree-file-map">map.kml</span>
+│   ├── <span class="tree-file tree-file-table">tap_test.csv</span>
+│   └── <span class="tree-file tree-file-table">channel_locations_corrected.csv</span>
+├── <span class="tree-folder tree-instrument">instrument/</span>
+│   ├── <span class="tree-file tree-file-config">interrogator_headers.json</span>
+│   └── <span class="tree-file tree-file-sheet">acquisition_settings.xlsx</span>
+└── <span class="tree-folder tree-corrections">corrections/</span>
+    ├── <span class="tree-file tree-file-table">bad_channels.csv</span>
+    ├── <span class="tree-file tree-file-text">timing_offset_notes.txt</span>
+    └── <span class="tree-file tree-file-table">distance_pick_updates.csv</span></code></pre>
+:::
+
+However, as the experiment progresses, different versions and revisions of the metadata often appear, more data are collected (perhaps with different interrogators or settings), and more researchers work on the dataset. As each researcher generates and interprets existing metadata, the process quickly becomes hard to manage and bug-prone. Clearly, a data model that is able to capture important information and integrate nicely into existing DFOS processing tools would be a big advantage.
+
+::: {.signal-grid}
+::: {.signal}
+### Strengths
+
+- Easy to get started
+- Extremely flexible
+
+:::
+
+::: {.signal}
+### Weaknesses
+- Unstructured metadata easily becomes decoupled from context and data
+- Manual code integration means wrong metadata can be used in analysis
+:::
+:::
+
+:::
+:::
+
+::: {.why-not-section}
+<button class="why-not-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#why-not-prodml" aria-expanded="false" aria-controls="why-not-prodml">PRODML</button>
+
+::: {#why-not-prodml .collapse}
+In some industries, DFOS metadata has been integrated into broader domain standards, such as Energistics [PRODML](https://energistics.org/prodml-developers-users). PRODML works well within an oil and gas production context, including DAS/DTS use cases, but it does not fit naturally as a general-purpose format for non-oil/gas experiments common in seismology. For example:
+
+  - Built for upstream oil/gas production, not standalone DFOS or seismology.
+  - Embedded in a broader wells, pipelines, facilities, flow-test, PVT, and production-volume model.
+  - Assumes the Energistics XML/EPC/HDF5/reference stack.
+  - Useful for oilfield exchange, but heavy for general DFOS deployments.
+
+Even if PRODML is a bit heavy to adopt wholesale for DASDAE's metadata model, it has useful patterns:
+
+- Separate optical-path topology from acquisition metadata.
+- Model calibration between loci, optical distance, and physical coordinates.
+- Track validity, provenance, OTDR evidence, and revised calibrations.
+- Use stable object references instead of duplicating context.
+- Keep bulk arrays external, with metadata pointing to HDF5 or similar files.
+
+::: {.signal-grid}
+::: {.signal}
+### Strengths
+
+- Mature exchange model for oilfield DFOS
+- Strong patterns for path, calibration, provenance, and external arrays
+
+:::
+
+::: {.signal}
+### Weaknesses
+- Too domain-specific for general purpose DFOS use
+- Too much packaging and schema weight for lightweight metadata
+:::
+:::
+
+:::
+:::
+
+::: {.why-not-section}
+<button class="why-not-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#why-not-stationxml" aria-expanded="false" aria-controls="why-not-stationxml">StationXML</button>
+
+::: {#why-not-stationxml .collapse}
+
+First, a bit of history. Seismologists quickly discovered that trying to cram all useful metadata or information into every file produced by a seismic instrument creates bloated files that become data archiving nightmares, particularly when metadata revisions require modifying many produced files.
+
+The solution was to create a "sidecar data" model. The time-series files store a minimal amount of information, then point to the external metadata model, which can be more comprehensive and easier to revise. [StationXML](https://www.fdsn.org/xml/station/) became the solution. It has been widely deployed by the seismology community ([FDSN](https://www.fdsn.org/)) for many years.
+
+StationXML defines a hierarchy of objects:
+
+- Inventory: a collection of metadata
+- Network: a collection of stations with unique identifying information
+- Station: roughly, a monitoring region or intention.
+- Channel: specific time-series information, including the instrument type/name, response information, etc.
+
+::: {.render_data_model spec="../specs/stationxml.yml"}
+:::
+
+So, the abstraction layering progresses from a collection of monitoring regions, a single monitoring region, to instrument specific information. This is encoded in the canonical time series identifier (seed code): {network}.{station}.{location}.{channel}. This is helpful in the DFOS context, but not broad enough to cover a distributed (non-point) monitoring region.
+
+Another weakness of StationXML, acutely felt by industrial/labratory seismologists, is the lack of support for a non-global coordinate systems.
+
+::: {.signal-grid}
+::: {.signal}
+### Strengths
+
+- Widely used seismology standard
+- Provides convenient network.station.location.channel domain codes
+
+:::
+
+::: {.signal}
+### Weaknesses
+- No support for fiber-optic monitoring domains or instruments configuration
+- Limited reusability of components (e.g., strictly hierarchical)
+- Fixed coordinate reference system
+:::
+:::
+
+:::
+:::
+
+::: {.why-not-section}
+<button class="why-not-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#why-not-fdsn" aria-expanded="false" aria-controls="why-not-fdsn">FDSN DAS Metadata Standard</button>
+
+::: {#why-not-fdsn .collapse}
+
+The recent [FDSN DAS Metadata Standard](https://docs.fdsn.org/projects/das-metadata/en/draft/) outlined by @lai2024toward demonstrates one workable archival solution and gives the community shared terminology for interrogators, acquisitions, cables, fibers, channel groups, and channels.
+
+::: {.render_data_model spec="../specs/fdsn-das-metadata.yml"}
+:::
+
+This model is valuable for archive submission, but its abstraction boundary deviates from existing standards (StationXML) more than necessary, and does not provide a way to describe monitoring domains (e.g., optical paths) independent of the instrument and its settings. For example, in StationXML, the monitoring intent is represented before the instrument-specific stream metadata:
+
+```{mermaid}
+flowchart LR
+    collection[Collection of Monitoring Regions] --> region[Monitoring Region] --> instrument[Instrument Specific]
+```
+
+The station specifies the monitoring region (e.g., a general geographic location), while channels describe instrument-specific time-series streams attached to it with some minor deviation from the station location allowed. The FDSN DAS Metadata effectively inverts that relationship, forcing instrument dependence on the specified monitoring region:
+
+```{mermaid}
+flowchart LR
+    collection[Collection of Monitoring Regions] --> instrument[Instrument Specific] --> region[Instrument/Region Mix]
+```
+
+Here, the channel group and channel carry much of the spatial monitoring-region information, but since they are nested under interrogator and acquisition metadata, they reflect a particular spatial sampling of the optical path. The model also lacks the specificity for fully describing optical paths (e.g., no place to describe splices, connectors, turnaround enclosures, etc.) and their time-varying nature (e.g., fiber breaks), since these do not directly change the shape of the data recorded.
+
+Moreover, often experiments couple both seismic and non-seismic instruments in the same deployment. Because of impedance mismatches with StationXML, this is not possible with the current standard.
+
+::: {.signal-grid}
+::: {.signal}
+### Strengths
+
+- Relatively simple
+- Provides direct mapping from data arrays to metadata
+
+:::
+
+::: {.signal}
+### Weaknesses
+- Lacks instrument-independent monitoring region abstraction
+- Limited support for describing optical paths and their time-varying nature
+- Doesn't support storing non-DAS (seismic) instruments that may be analyzed together
+:::
+:::
+
+:::
+:::
+
+## DASDAE Inventory
+
+The DASDAE inventory aims to solve the problems with:
+
+::: {.signal-grid}
+::: {.signal}
+### StationXML Compatible
+- Parity of StationXML abstraction layers
+- NSLC-compatible codes for fiber patches
+- Supports storing seismic and fiber metadata together
+:::
+
+::: {.signal}
+### Fiber-native
+- Describes optical path independent of instrument using optical components (splice, connectors, etc.)
+- Supports time-varying changes to optical paths
+- Independent description of coupling, locations, and labels
+
+:::
+
+::: {.signal}
+### DASDAE Integration
+- DASCore spool integration
+- Rich querying/metadata integration
+- Bolt-on support for existing archives
+:::
+:::
+
+At a glance, it looks like this:
+
+:::{.callout-note}
+Hover over an element to see more details, and click to expands its children (if any).
+:::
+
+::: {.render_data_model spec="../specs/dasdae-inventory.yml"}
+:::
+
+The rest of this site describes the model, shows how it can be used in code, and works through examples for creating and maintaining inventory metadata in fiber-optic deployments.
+
+## Sections
+
+- [Intro](index.qmd) frames the motivation and compares existing approaches.
+- [Model](../Model/model.qmd) explains the object graph, identity model, and standards context.
+- [API](../API/spool.qmd) sketches the conceptual API for spools, inventories, fiber arrays, and optical paths.
+- [Examples](../Examples/index.qmd) provides concrete inventory sketches.
+- [Q&A](../Q&A/index.qmd) answers common modeling questions and edge cases.
+- [Changelog](changelog.qmd) records notable model and documentation changes.
+- [References](../References/index.qmd) lists the generated object reference pages.

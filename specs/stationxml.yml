@@ -1,9 +1,11 @@
 id: stationxml
 title: StationXML
-direction: LR
+direction: TB
+styles: specs/styles.yml
 nodes:
   Inventory:
     label: Inventory
+    style_class: metadata
     summary: Top-level StationXML document containing one or more FDSN network metadata records.
     attributes:
       - name: Source
@@ -26,6 +28,8 @@ nodes:
         description: Networks included in the inventory.
   Network:
     label: Network
+    shape: square
+    style_class: container
     summary: FDSN network code and metadata grouping a set of stations operated under a common network identity.
     attributes:
       - name: code
@@ -48,6 +52,7 @@ nodes:
         description: Stations belonging to the network.
   Station:
     label: Station
+    style_class: monitoring
     summary: Site-level observing identity with location, operators, creation dates, and one or more channels.
     attributes:
       - name: code
@@ -82,6 +87,7 @@ nodes:
         description: Channels recorded at the station.
   Channel:
     label: Channel
+    style_class: instrument
     summary: A single time-series stream identity with location code, channel code, orientation, sampling, and instrument response.
     attributes:
       - name: code
@@ -126,6 +132,7 @@ nodes:
   Response:
     label: Response
     display: Response
+    style_class: instrument
     summary: Instrument response model for a channel, including sensitivities and one or more response stages.
     attributes:
       - name: InstrumentSensitivity

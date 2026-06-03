@@ -1,0 +1,101 @@
+---
+title: "Spool"
+sidebar: api
+---
+
+In the proposed workflow, DASCore's `Spool` acts as a bridge between stored patch (time-series) data and the DASDAE `Inventory`. The spool finds the relevant patches using indexed patch metadata; the selected patches then use `Inventory` for richer context querying, selectively transferring coordinates/metadata, etc.
+
+## Inventory Workflow
+
+### Spool operations
+
+The inventory can be directly attached to a spool, in which case it acts as a metadata-fallback for patch operations. 
+
+```python
+import dascore as dc
+
+inventory = dc.Inventory.from_yaml("inventory.yaml")
+
+# This automatically filters original contents to include only patches
+# for which there are valid entries in the inventory.
+spool = dc.spool("/data/archive", inventory=inventory)
+
+raw = (
+    spool
+    # Get rid of channels with undefined coupling
+    .unselect(coupling="")
+    # Coordinate selection from corresponding coordinates
+    .select(latitude=(45, 50), elevation=(100, 250))
+)
+
+patch = raw[0]
+```
+
+### Patch operations
+
+```python
+# Get optical distance from relevant optical path
+patch = patch.distance_from_inventory(inventory, dim="channel")
+
+# Add attributes from relevant acquisition
+patch = patch.add_acquisition_attrs(
+    inventory,
+    attrs=("tag", "sample_rate", "interrogator.model"),
+)
+
+# Add coords from fiber array
+patch = patch.add_coords(
+    inventory=inventory,
+    coords=("x", "y", "z"),
+    on_missing="nan",
+)
+```
+
+The patch resolves inventory context from its `data_source_id`, or from an explicit `data_source_id` passed to the inventory methods.
+
+## Working with Archives
+Of course, native interrogators don't support our proposed standard, so written patch files have no way of knowing what network, fiber_array, location, and acquisition code they should be assigned. One very costly and risky approach would be to iterate each file and append the appropriate metadata, if the format supports it. However, this is not ideal for multiple reasons.
+
+A better approach is to update DASCore's file scanning to allow a special file to define some metadata for all files in the same directory. An example of such a file might look like this:
+
+```yaml {filename="line01/.patch_attrs.yml"}
+format: dascore_patch_attr
+version: "0.1.0"
+overwrite: true
+attrs:
+  network: DAS
+  fiber_array: R2D1
+  location: 01
+  acquisition: HHZ
+```
+
+```yaml {filename="line02/.patch_attrs.yml"}
+format: dascore_patch_attr
+version: "0.1.0"
+overwrite: true
+attrs:
+  network: DAS
+  fiber_array: R2D2
+  location: 01
+  acquisition: HHZ
+```
+Then, if the directory structure looks like this:
+
+::: {.adhoc-tree}
+<pre><code><span class="tree-folder tree-root">archive/</span>
+├── <span class="tree-file tree-file-config">inventory.yaml</span>
+├── <span class="tree-folder tree-data">line_01/</span>
+│   ├── <span class="tree-file tree-file-config">.patch_attrs.yml</span>
+│   ├── <span class="tree-file tree-file-data">2024-05-01_000000.h5</span>
+│   ├── <span class="tree-file tree-file-data">2024-05-01_010000.h5</span>
+│   └── <span class="tree-file tree-file-data">2024-05-01_020000.h5</span>
+├── <span class="tree-folder tree-data">line_02/</span>
+│   ├── <span class="tree-file tree-file-config">.patch_attrs.yml</span>
+│   ├── <span class="tree-file tree-file-data">2024-05-01_000000.h5</span>
+│   ├── <span class="tree-file tree-file-data">2024-05-01_010000.h5</span>
+│   └── <span class="tree-file tree-file-data">2024-05-01_020000.h5</span>
+└── <span class="tree-folder tree-notes">field_notes/</span>
+    ├── <span class="tree-file tree-file-markdown">deployment_log.md</span>
+    └── <span class="tree-file tree-file-table">tap_tests.csv</span></code></pre>
+:::
+DASCore will automatically associate the attributes from the .patch_attrs.yml files with those in the corresponding directories, making it simple to "bolt on" a DASDAE inventory to virtually any DFOS data archive.

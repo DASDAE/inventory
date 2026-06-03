@@ -1,18 +1,69 @@
 :root {
   --das-accent: #0b7285;
   --das-accent-2: #2f9e44;
+  --das-warning: #f08c00;
+  --das-violet: #6741d9;
   --das-ink: #243036;
   --das-muted: #5c6770;
   --das-band: #f6f8fa;
+  --das-panel: #ffffff;
   --das-line: #d9e1e8;
+  --das-code: #f1f5f9;
 }
 
 body {
   color: var(--das-ink);
+  font-size: 1.25rem;
+  line-height: 1.66;
+}
+
+a {
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
 }
 
 .navbar {
   border-bottom: 1px solid var(--das-line);
+}
+
+.navbar .navbar-nav .nav-link[href*="github.com/dasdae/inventory/discussions"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  margin-left: 0.3rem;
+  padding: 0.42rem 0.72rem;
+  border: 1px solid #1f2328;
+  border-radius: 6px;
+  background: #24292f;
+  color: #ffffff;
+  font-size: 0.92rem;
+  font-weight: 650;
+  line-height: 1.1;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.navbar .navbar-nav .nav-link[href*="github.com/dasdae/inventory/discussions"]:hover,
+.navbar .navbar-nav .nav-link[href*="github.com/dasdae/inventory/discussions"]:focus {
+  border-color: #32383f;
+  background: #32383f;
+  color: #ffffff;
+}
+
+#quarto-sidebar .sidebar-link,
+#quarto-sidebar .sidebar-item-text {
+  font-size: 1.08rem;
+  line-height: 1.35;
+}
+
+#quarto-margin-sidebar #toc-title {
+  font-size: 1.05rem;
+  line-height: 1.35;
+}
+
+#quarto-margin-sidebar #TOC .nav-link {
+  font-size: 1.02rem;
+  line-height: 1.35;
 }
 
 .hero {
@@ -35,34 +86,120 @@ body {
   color: var(--das-muted);
 }
 
+.page-summary {
+  margin: 0.75rem 0 1.4rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--das-line);
+  border-left: 4px solid var(--das-accent);
+  border-radius: 8px;
+  background: var(--das-band);
+  color: var(--das-muted);
+  font-size: 1.02rem;
+}
+
 .signal-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 0.85rem;
-  margin: 1.5rem 0 2rem;
+  margin: 1.25rem 0 1.8rem;
 }
 
 .signal {
-  border: 1px solid var(--das-line);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(11, 114, 133, 0.2);
   border-radius: 8px;
-  padding: 1rem;
-  background: var(--das-band);
+  padding: 0.85rem 0.95rem 0.9rem;
+  background: linear-gradient(180deg, #f7fcfd 0%, var(--das-panel) 72%);
+  box-shadow: 0 6px 18px rgba(18, 30, 38, 0.07);
+  color: var(--das-muted);
+  font-size: 0.94rem;
+  line-height: 1.48;
+}
+
+.signal::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: var(--das-accent);
+  content: "";
+}
+
+.signal:nth-child(2n) {
+  border-color: rgba(201, 72, 72, 0.22);
+  background: linear-gradient(180deg, #fff8f8 0%, var(--das-panel) 72%);
+}
+
+.signal:nth-child(2n)::before {
+  background: #c94848;
+}
+
+.signal:first-child {
+  border-color: rgba(47, 158, 68, 0.22);
+  background: linear-gradient(180deg, #f7fdf8 0%, var(--das-panel) 72%);
+}
+
+.signal:first-child::before {
+  background: var(--das-accent-2);
+}
+
+.signal:nth-child(3n) {
+  border-color: rgba(103, 65, 217, 0.2);
+  background: linear-gradient(180deg, #faf8ff 0%, var(--das-panel) 72%);
+}
+
+.signal:nth-child(3n)::before {
+  background: var(--das-violet);
 }
 
 .signal h3 {
   margin-top: 0;
-  font-size: 1rem;
+  margin-bottom: 0.35rem;
+  color: var(--das-ink);
+  font-size: 0.95rem;
+  line-height: 1.25;
 }
 
-.proposal-note {
+.signal ul {
+  padding-left: 1.1rem;
+  margin-bottom: 0;
+}
+
+.signal > :last-child {
+  margin-bottom: 0;
+}
+
+.proposal-note,
+.design-rule,
+.tradeoff {
   border-left: 4px solid var(--das-accent);
   padding: 0.85rem 1rem;
   background: #edf8fa;
   margin: 1.5rem 0;
+  border-radius: 0 8px 8px 0;
 }
 
-.quarto-dark .proposal-note {
-  background: #102c32;
+.proposal-note > :last-child,
+.design-rule > :last-child,
+.tradeoff > :last-child,
+.page-summary > :last-child {
+  margin-bottom: 0;
+}
+
+.design-rule {
+  border-left-color: var(--das-accent-2);
+  background: #ebfbee;
+}
+
+.tradeoff {
+  border-left-color: var(--das-warning);
+  background: #fff4e6;
+}
+
+.proposal-note strong,
+.design-rule strong,
+.tradeoff strong {
+  color: var(--das-ink);
 }
 
 .model-band {
@@ -78,25 +215,215 @@ body {
   font-weight: 600;
 }
 
+table {
+  border-color: var(--das-line);
+}
+
+thead th {
+  background: var(--das-band);
+  color: var(--das-ink);
+}
+
+tbody tr:nth-child(even) {
+  background: rgba(246, 248, 250, 0.62);
+}
+
+td:first-child code,
+th:first-child code {
+  font-weight: 700;
+}
+
 code {
-  font-size: 0.92em;
+  font-size: 0.94em;
+}
+
+.sourceCode,
+pre {
+  border-radius: 8px;
+}
+
+div.sourceCode,
+pre.sourceCode,
+pre code {
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.adhoc-tree {
+  margin: 1.3rem 0 1.7rem;
+  border: 1px solid var(--das-line);
+  border-radius: 8px;
+  background: #fbfcfd;
+  box-shadow: 0 10px 28px rgba(18, 30, 38, 0.08);
+  overflow: hidden;
+}
+
+.adhoc-tree::before {
+  display: block;
+  padding: 0.55rem 0.8rem;
+  border-bottom: 1px solid var(--das-line);
+  background: var(--das-band);
+  color: var(--das-muted);
+  content: "DAS Deployment";
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.adhoc-tree div.sourceCode,
+.adhoc-tree pre {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.adhoc-tree pre {
+  padding: 1rem 1.15rem;
+  color: #8a99a5;
+  line-height: 1.45;
+}
+
+.adhoc-tree code {
+  font-size: 1.08rem;
+}
+
+.why-not-section {
+  margin: 1.1rem 0 1.35rem;
+  border-top: 1px solid var(--das-line);
+}
+
+.why-not-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.8rem 0;
+  border: 0;
+  background: transparent;
+  color: var(--das-ink);
+  font-size: 1.42rem;
+  font-weight: 760;
+  line-height: 1.25;
+  text-align: left;
+}
+
+.why-not-toggle::after {
+  content: "+";
+  margin-left: 1rem;
+  color: var(--das-muted);
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.why-not-toggle[aria-expanded="true"]::after {
+  content: "-";
+}
+
+.why-not-toggle:hover {
+  color: var(--das-accent);
+}
+
+.why-not-toggle:focus-visible {
+  outline: 2px solid var(--das-accent);
+  outline-offset: 4px;
+}
+
+.tree-folder,
+.tree-file {
+  font-weight: 700;
+}
+
+.tree-root {
+  color: #243036;
+}
+
+.tree-folder:not(.tree-root) {
+  color: #243036;
+}
+
+.tree-file-data {
+  color: #3b6ea8;
+}
+
+.tree-file-image {
+  color: #7b5ea7;
+}
+
+.tree-file-sheet {
+  color: #4f7f5f;
+}
+
+.tree-file-markdown {
+  color: #6b6fa6;
+}
+
+.tree-file-map {
+  color: #6f8257;
+}
+
+.tree-file-table {
+  color: #3f8a94;
+}
+
+.tree-file-config {
+  color: #8a6f4d;
+}
+
+.tree-file-text {
+  color: #495057;
 }
 
 .render-data-model {
-  margin: 1.25rem 0 1.75rem;
+  margin: 1.4rem 0 2rem;
+  padding: 1rem;
+  border: 1px solid var(--das-line);
+  border-radius: 8px;
+  background: linear-gradient(180deg, var(--das-panel), var(--das-band));
 }
 
-.render-data-model-svg {
+.data-model-title {
+  margin-bottom: 0.6rem;
+  color: var(--das-ink);
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.render-data-model-graph {
   overflow-x: auto;
+  width: 100%;
+  height: min(68vh, 640px);
+  min-height: 420px;
+  padding: 0.5rem;
+  border: 1px solid rgba(217, 225, 232, 0.76);
+  border-radius: 6px;
+  background: transparent;
 }
 
-.render-data-model-svg svg {
-  max-width: 100%;
-  height: auto;
+.render-data-model-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0 0 0.65rem;
+}
+
+.render-data-model-toolbar button {
+  padding: 0.25rem 0.6rem;
+  border: 1px solid var(--das-line);
+  border-radius: 6px;
+  background: var(--das-panel);
+  color: var(--das-ink);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.render-data-model-toolbar button:hover {
+  border-color: var(--das-accent);
 }
 
 .data-model-legend {
-  margin: 0.5rem 0 1rem;
+  margin: 0.75rem 0 0;
   color: var(--das-muted);
   font-size: 0.88rem;
 }
@@ -110,7 +437,7 @@ code {
 .data-model-legend ul {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.45rem 1rem;
+  gap: 0.55rem 1rem;
   padding: 0;
   margin: 0;
   list-style: none;
@@ -156,7 +483,9 @@ code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
   font-size: 0.78rem;
   line-height: 1.35;
-  pointer-events: none;
+  overscroll-behavior: contain;
+  pointer-events: auto;
+  scrollbar-gutter: stable;
   white-space: normal;
 }
 
@@ -168,6 +497,17 @@ code {
   margin-bottom: 0.45rem;
   font-weight: 700;
   font-size: 0.9rem;
+}
+
+.data-model-tooltip-title a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.16em;
+}
+
+.data-model-tooltip-title a:hover {
+  color: var(--das-blue);
 }
 
 .data-model-tooltip-heading {
@@ -209,7 +549,85 @@ code {
   color: #bac5ca;
 }
 
+.quarto-dark {
+  --das-ink: #f0f4f6;
+  --das-muted: #bac5ca;
+  --das-band: #172126;
+  --das-panel: #1f2a30;
+  --das-line: #45545d;
+  --das-code: #141d21;
+}
+
+.quarto-dark .signal,
+.quarto-dark .page-summary,
+.quarto-dark .render-data-model {
+  box-shadow: none;
+}
+
+.quarto-dark .signal {
+  border-color: rgba(11, 114, 133, 0.42);
+  background: linear-gradient(180deg, #13282d 0%, var(--das-panel) 76%);
+}
+
+.quarto-dark .signal:nth-child(2n) {
+  border-color: rgba(201, 72, 72, 0.42);
+  background: linear-gradient(180deg, #321d1d 0%, var(--das-panel) 76%);
+}
+
+.quarto-dark .signal:first-child {
+  border-color: rgba(47, 158, 68, 0.38);
+  background: linear-gradient(180deg, #142a1d 0%, var(--das-panel) 76%);
+}
+
+.quarto-dark .signal:nth-child(3n) {
+  border-color: rgba(103, 65, 217, 0.42);
+  background: linear-gradient(180deg, #211d35 0%, var(--das-panel) 76%);
+}
+
+.quarto-dark .proposal-note {
+  background: #102c32;
+}
+
+.quarto-dark .design-rule {
+  background: #12301f;
+}
+
+.quarto-dark .tradeoff {
+  background: #33250f;
+}
+
+.quarto-dark .adhoc-tree {
+  background: #18242a;
+  box-shadow: none;
+}
+
+.quarto-dark .adhoc-tree pre {
+  color: #6f7f89;
+}
+
+.quarto-dark .tree-root {
+  color: #f0f4f6;
+}
+
+.quarto-dark .tree-folder:not(.tree-root),
+.quarto-dark .tree-file-text {
+  color: #bac5ca;
+}
+
+.quarto-dark .render-data-model-graph {
+  background: transparent;
+  border-color: #45545d;
+}
+
+.quarto-dark tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.035);
+}
+
 .quarto-dark .data-model-legend-title,
-.quarto-dark .data-model-legend-label {
+.quarto-dark .data-model-legend-label,
+.quarto-dark .data-model-title,
+.quarto-dark .proposal-note strong,
+.quarto-dark .design-rule strong,
+.quarto-dark .tradeoff strong {
   color: #f0f4f6;
 }

@@ -1,0 +1,246 @@
+---
+title: "Simple Inventory"
+sidebar: examples
+---
+
+This recipe demonstrates how the DASDAE inventory can be used with a simple deployment. In this scenario, the interrogator is connected to a telemetry cable (with unknown geometry/coupling) that then connects to a trenched cable through two E2000 connectors housed in an E2000 coupler. The sensing fiber runs 300 m east, turns north for 120 m, then leaves the trench and continues 300 m east on the surface (@fig-simple-fiber-deployment).
+
+![Map of a simple fiber deployment with trenched and loose coupling sections](../svg/examples/simple_inventory_map.svg){#fig-simple-fiber-deployment fig-cap="Simple fiber deployment."}
+
+::: {.proposal-note}
+This page is an illustrative inventory example for the proposal. The exact Python API names may shift as the DASDAE inventory implementation evolves.
+:::
+
+## Field Notes
+
+The tap test defines four points along the sensing fiber. Coordinates are WGS84 latitude, longitude, and elevation with values centered in the gardens of Versailles (just for fun).
+
+| Point | Description | Optical Distance (m) | Latitude | Longitude | Elevation (m) |
+|---|---|---:|---:|---:|---:|
+| A | Start of sensing fiber after E2000 coupler | 50 | 48.807461 | 2.103905 | 115 |
+| B | 90 degree bend in trenched section | 350 | 48.807461 | 2.108000 | 115 |
+| C | Cable exits trench and becomes loose | 470 | 48.808539 | 2.108000 | 115 |
+| D | End of loose surface-laid section | 770 | 48.808539 | 2.112095 | 115 |
+
+: Tap-test points used to define deployment geometry. {#tbl-simple-tap-test}
+
+The deployment uses a telemetry (lead-in) cable to connect to a separate sensing cable.
+
+| Cable | Role | Fiber Type | Construction | Notes |
+|---|---|---|---|---|
+| Telemetry lead-in | Interrogator to E2000 coupler | Single-mode | Armored patch cable | Not used for sensing |
+| Solifos BRUsens DAS AC3 | DAS sensing fiber | DAS sensing cable | Armored sensing cable | Trenched from A-C, loose from C-D |
+
+: Fiber and cable types used in the simple deployment. {#tbl-simple-fiber-types}
+
+## Build The Inventory
+
+Start by transcribing the field notes into a table. This gives the inventory a single source for geometry and distance intervals. Normally one would probably just read this from a CSV. 
+
+```python
+import pandas as pd
+
+tap_points = pd.DataFrame(
+    {
+        "point": ["A", "B", "C", "D"],
+        "description": [
+            "Start of sensing fiber after E2000 coupler",
+            "90 degree bend in trenched section",
+            "Cable exits trench and becomes loose",
+            "End of loose surface-laid section",
+        ],
+        "distance": [50.0, 350.0, 470.0, 770.0],
+        "latitude": [48.807461, 48.807461, 48.808539, 48.808539],
+        "longitude": [2.103905, 2.108000, 2.108000, 2.112095],
+        "elevation": [115.0, 115.0, 115.0, 115.0],
+    }
+).set_index("point")
+
+tap_points["coordinates"] = list(
+    zip(tap_points["longitude"], tap_points["latitude"], tap_points["elevation"])
+)
+total_optical_length = tap_points.loc["D", "distance"] - tap_points.loc["A", "distance"]
+```
+
+### Acquisition
+
+The acquisition describes the interrogator and the configuration used to produce a data stream.
+
+```python
+import dascore.core.inventory as inv
+
+interrogator = inv.Interrogator(
+    manufacturer="Example Instruments",
+    model="DAS-1000",
+    serial_number="RUDAS88",
+)
+
+acquisition = inv.Acquisition(
+    code="RAW",
+    location_code="",
+    data_category="DAS",
+    data_type="strain",
+    data_units="strain",
+    interrogator=interrogator,
+    start_time="2026-06-01",
+    sample_rate=250.0,
+    gauge_length=2.0,
+    spatial_interval=1.0,
+    extra_fields={"software_version": "v0.2.1"},
+)
+```
+
+### Cables And Fibers
+
+The lead-in cable, sensing cable, and E2000 coupler are independent resources. The optical path can refer to them without duplicating metadata.
+
+The inventory implementation generates unique internal ids automatically.
+
+```python
+telemetry_cable = inv.Cable(
+    name="Telemetry lead-in cable",
+    owner="Example Operator",
+    fiber_count=1,
+    notes="Armored patch lead-in cable from interrogator.",
+)
+
+sensing_cable = inv.Cable(
+    name="Solifos BRUsens DAS AC3 cable",
+    owner="Example Operator",
+    manufacturer="Solifos",
+    model="BRUsens DAS AC3",
+    fiber_count=4,
+)
+
+e2000_coupler = inv.Enclosure(
+    name="E2000 coupler",
+    enclosure_type="coupler",
+)
+```
+
+### Optical Path
+
+The optical path describes the components encountered by the light, along with geometry, coupling, and labels that can later be projected onto patch coordinates.
+
+#### Components
+
+```python
+telemetry_lead = inv.FiberSegment(
+    name="Telemetry lead-in fiber",
+    optical_length=tap_points.loc["A", "distance"],
+    fiber_standard="OS2",
+    color="yellow",
+    notes="Not used for sensing.",
+    container=telemetry_cable,
+)
+lead_in_connector = inv.Connector(
+    name="Telemetry lead-in E2000 connector",
+    connector_type="E2000",
+    container=e2000_coupler,
+)
+sensing_connector = inv.Connector(
+    name="Sensing cable E2000 connector",
+    connector_type="E2000",
+    container=e2000_coupler,
+)
+sensing_fiber = inv.FiberSegment(
+    name="Solifos BRUsens DAS AC3 sensing fiber",
+    optical_length=total_optical_length,
+    fiber_type="das_sensing_cable",
+    fiber_standard="Solifos BRUsens DAS AC3",
+    buffer_type="armored_sensing_cable",
+    color="blue",
+    container=sensing_cable,
+)
+```
+
+#### Geometry
+
+```python
+unknown_lead_in = inv.Geometry(optical_length=50)
+east_trench = inv.Geometry(
+    optical_length=300.0,
+    geometry_type="linear",
+    coordinates=(tap_points.loc["A", "coordinates"], tap_points.loc["B", "coordinates"]),
+)
+north_trench = inv.Geometry(
+    optical_length=120.0,
+    geometry_type="linear",
+    coordinates=(tap_points.loc["B", "coordinates"], tap_points.loc["C", "coordinates"]),
+)
+surface_run = inv.Geometry(
+    optical_length=300.0,
+    geometry_type="linear",
+    coordinates=(tap_points.loc["C", "coordinates"], tap_points.loc["D", "coordinates"]),
+)
+```
+
+#### Coupling Conditions
+
+```python
+lead_in_coupling = inv.CouplingCondition(optical_length=50)
+trenched = inv.CouplingCondition(
+    optical_length=420.0,
+    coupling_type="trench",
+    medium="soil",
+    attachment="direct_burial",
+)
+loose = inv.CouplingCondition(
+    optical_length=300.0,
+    coupling_type="surface",
+    attachment="loose",
+)
+```
+
+#### Annotations
+
+```python
+trenched_label = inv.OpticalPathAnnotation(distance=50.0, optical_length=420.0, label="trenched")
+loose_label = inv.OpticalPathAnnotation(distance=470.0, optical_length=300.0, label="loose")
+```
+
+#### Assemble The Path
+
+```python
+optical_path = inv.OpticalPath(
+    name="Simple DAS experiment",
+    start_time="2026-06-01",
+    optical_components=(
+        telemetry_lead,
+        lead_in_connector,
+        sensing_connector,
+        sensing_fiber,
+    ),
+    geometries=(unknown_lead_in, east_trench, north_trench, surface_run),
+    coupling_conditions=(lead_in_coupling, trenched, loose),
+    annotations=(trenched_label, loose_label),
+).validate()
+```
+
+### Inventory
+
+The fiber array links the acquisition and optical path into one patch-resolvable observing identity.
+
+```python
+fiber_array = inv.FiberArray(
+    code="SIMP",
+    name="Simple trench array",
+    start_time="2026-06-01",
+    acquisitions=(acquisition,),
+    optical_paths=(optical_path,),
+    dims="distance,time",
+    tag="simple",
+)
+
+network = inv.Network(
+    code="XX",
+    name="Simple example network",
+    fiber_arrays=(fiber_array,),
+)
+
+inventory = inv.Inventory(
+    networks=(network,),
+)
+```
+
+The shareable resources (cable, enclosures), can be manually added to the Inventory's resources, but if not, they will be populated automatically with the inventory creation. 

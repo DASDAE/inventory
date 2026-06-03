@@ -1,0 +1,37 @@
+styles:
+  - id: metadata
+    label: Metadata
+    description: Top-level metadata document or overview.
+    fill: "#e7f5ff"
+    stroke: "#0b7285"
+    color: "#102a43"
+  - id: container
+    label: Container
+    description: Organizational grouping for monitoring entities.
+    fill: "#ebfbee"
+    stroke: "#2f9e44"
+    color: "#1b4332"
+  - id: monitoring
+    label: Monitoring region
+    description: Durable observing target or monitoring identity.
+    fill: "#f3f0ff"
+    stroke: "#6741d9"
+    color: "#2f1b78"
+  - id: instrument
+    label: Instrument-specific
+    description: Instrument stream, response, or acquisition-specific metadata.
+    fill: "#fff4e6"
+    stroke: "#f08c00"
+    color: "#5c3d00"
+  - id: shareable_resource
+    label: Shareable resource
+    description: Stable resource-id object reused across inventory context.
+    fill: "#eef2ff"
+    stroke: "#5c7cfa"
+    color: "#25316d"
+  - id: monitoring_instrument
+    label: Monitoring + instrument-specific
+    description: Monitoring identity represented through instrument-specific channel metadata.
+    fill: "#f3f0ff"
+    stroke: "#f08c00"
+    color: "#2f1b78"

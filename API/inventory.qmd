@@ -1,0 +1,171 @@
+---
+title: "Inventory"
+sidebar: api
+---
+
+`Inventory` is the top-level metadata object used by DASCore. It is the serialized manifest boundary and the object patch methods use to resolve fiber-array, acquisition, interrogator, and optical-path context. Like other objects in DASCore, it is functionally immutable.
+
+## Defining an Inventory
+
+A minimal inventory can be created directly from DASCore's inventory classes. In practice, most users will load this from YAML, but constructing it in Python makes the object relationships explicit.
+
+```python
+import dascore as dc
+from dascore.core import inventory as inv
+
+interrogator = inv.Interrogator(
+    resource_id="int_01",
+    manufacturer="Example Instruments",
+    model="DAS-1000",
+    serial_number="SN-001",
+)
+
+cable = inv.Cable(
+    resource_id="cable_01",
+    name="L001 cable",
+    fiber_count=4,
+)
+
+geometry = inv.Geometry(
+    optical_length=1000.0,
+    name="survey line",
+    distance=(0.0, 1000.0),
+    coordinates=((45.0, -112.0, 1200.0), (45.01, -112.02, 1180.0)),
+)
+
+fiber = inv.FiberSegment(
+    optical_length=1000.0,
+    name="fiber 1",
+    container=cable,
+    fiber_index=1,
+    color="blue",
+)
+
+path = inv.OpticalPath(
+    name="l001_path",
+    optical_components=(fiber,),
+    geometries=(geometry,),
+)
+
+acquisition = inv.Acquisition(
+    code="RAW",
+    location_code="01",
+    data_category="DAS",
+    data_type="strain_rate",
+    data_units="1/s",
+    interrogator=interrogator,
+    sample_rate=250.0,
+    gauge_length=10.0,
+    spatial_interval=1.0,
+    start_distance=0.0,
+)
+
+fiber_array = inv.FiberArray(
+    code="L001",
+    name="L001",
+    acquisitions=(acquisition,),
+    optical_paths=(path,),
+)
+
+network = inv.Network(
+    code="DAS",
+    name="Example DAS network",
+    fiber_arrays=(fiber_array,),
+)
+
+inventory = dc.Inventory(
+    resource_id="example_inventory",
+    resources={
+        interrogator.resource_id: interrogator,
+        cable.resource_id: cable,
+    },
+    networks=(network,),
+)
+```
+
+This inventory can resolve patches whose data source id is:
+
+```text
+DAS.L001.01.RAW
+```
+
+Once resolved, the inventory provides acquisition values such as `sample_rate`, instrument values such as `interrogator.model`, and optical path context such as geometry, coupling, labels, and optical components.
+
+
+## Updating an Inventory Component
+
+Since `Inventory` and its components are immutable, DASCore users follow the pattern of creating a new component with updated fields, then replacing it in the inventory. The original object remains unchanged.
+
+```python
+fiber_array = inventory.networks[0].fiber_arrays[0]
+acquisition = fiber_array.acquisitions[0]
+
+corrected_acquisition = acquisition.new(
+    sample_rate=500.0,
+    notes="Corrected from field log.",
+)
+
+inventory_v2 = inventory.replace(acquisition, corrected_acquisition)
+```
+
+The same pattern applies to optical path revisions. For example if a fiber breaks, one can discover the break by looking at continuous files, fix the endtime for the old `OpticalPath` and add the new optical path as the current one.
+
+```python
+fiber_array = inventory.networks[0].fiber_arrays[0] 
+opath = fiber_array.optical_paths[-1]
+
+break_time = "2024-05-12T10:30:00.12"
+break_distance = 600.0
+
+closed_opath = opath.new(end_time=break_time)
+new_opath = (
+    opath.split(break_distance)[0]
+    .new(start_time=break_time)
+)
+
+left, right = path.split_at(650.0)
+shortened_path = left.new(
+    end_time="2024-05-12T10:30:00",
+    notes="Fiber break after 650 m.",
+)
+new_fiber_array = fiber_array.new(
+    optical_paths = (
+        fiber_array.optical_paths[:-1] + (closed_opath, new_opath)
+    )
+)
+
+inventory_v2 = inventory.replace(fiber_array, new_fiber_array)
+```
+
+Or through a convenience function:
+
+```python
+inventory_v2 = inventory.register_fiber_break(
+    source_id="AA.F023.01.HRS", time=break_time, distance=break_distance
+)
+```
+
+This keeps update logic local to the object being corrected while letting the inventory maintain the nested tree.
+
+## Patch Resolution
+
+Patch enrichment starts from `data_source_id`. The identifier selects a network, fiber array, acquisition location code, and acquisition code:
+
+```python
+patch = patch.update_attrs(data_source_id="DAS.L001.01.RAW")
+
+patch = patch.distance_from_inventory(inventory, dim="channel")
+patch = patch.add_inventory_attrs(
+    inventory,
+    attrs=("sample_rate", "gauge_length", "interrogator.model"),
+)
+patch = patch.add_inventory_coords(
+    inventory,
+    coords=("label", "latitude", "longitude", "elevation"),
+    on_missing="nan",
+)
+```
+
+The patch remains lightweight until these methods are called. The inventory stays external, versionable, and reusable across many files.
+
+## Design Rule

@@ -1,0 +1,12 @@
+---
+title: "Examples"
+sidebar: examples
+---
+
+These examples show concrete inventory documents and API sketches using the DASDAE metadata model.
+
+## Inventory Examples
+
+- [Simple Inventory](simple-inventory.qmd): build a small inventory for a trenched and surface-laid fiber deployment.
+- [Tunnel Deployment](tunnel.qmd): describe a mine tunnel deployment with borehole, trench, and coiled cable sections.
+- [NORFOX](norfox.qmd): model a five-arm fiber-optic array with multiple cables, pipe enclosures, loop closures, KML-derived geometry, and co-located NORES stations.

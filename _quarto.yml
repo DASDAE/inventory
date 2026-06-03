@@ -1,6 +1,8 @@
 project:
   type: website
   output-dir: _site
+  pre-render:
+    - uv run python scripts/update_site_title.py
 
 filters:
   - filters/render-data-model.lua
@@ -22,24 +24,31 @@ format:
 bibliography: references.bib
 
 website:
-  title: "DAS Metadata"
-  site-url: "https://dasdae.github.io/das_metadata"
-  repo-url: "https://github.com/DASDAE/das_metadata"
+  title: "DASDAE Inventory (v0.0.1)"
+  site-url: "https://dasdae.github.io/inventory"
+  repo-url: "https://github.com/DASDAE/inventory"
   page-navigation: true
   navbar:
     background: light
     search: true
     left:
       - text: "Intro"
-        href: index.qmd
-      - text: "Scenarios"
-        href: scenarios/index.qmd
+        href: Intro/index.qmd
+      - text: "Model"
+        href: Model/model.qmd
       - text: "API"
-        href: api/index.qmd
+        href: API/spool.qmd
+      - text: "Examples"
+        href: Examples/index.qmd
+      - text: "Q&A"
+        href: Q&A/index.qmd
+      - text: "References"
+        href: References/index.qmd
     right:
-      - icon: github
-        href: "https://github.com/DASDAE/dascore"
-        aria-label: "DASCore GitHub"
+      - text: "Join the Conversation"
+        icon: github
+        href: "https://github.com/dasdae/inventory/discussions"
+        aria-label: "Join the DASDAE Inventory discussion"
   sidebar:
     - id: intro
       title: "Intro"
@@ -47,34 +56,103 @@ website:
       collapse-level: 2
       contents:
         - text: "Overview"
-          href: index.qmd
+          href: Intro/index.qmd
+        - text: "Changelog"
+          href: Intro/changelog.qmd
+    - id: model
+      title: "Model"
+      style: "floating"
+      collapse-level: 2
+      contents:
         - text: "Model At A Glance"
-          href: intro/model.qmd
-        - text: "Standards Context"
-          href: intro/standards.qmd
-    - id: scenarios
-      title: "Scenarios"
+          href: Model/model.qmd
+        - text: "OpticalPath"
+          href: Model/optical-path.qmd
+        - text: "Optical Components"
+          href: Model/optical-components.qmd
+    - id: references
+      title: "References"
+      style: "floating"
+      collapse-level: 2
+      contents:
+        - text: "Object Reference"
+          href: References/index.qmd
+        - text: "Acquisition"
+          href: References/Acquisition.qmd
+        - text: "Cable"
+          href: References/Cable.qmd
+        - text: "Channel"
+          href: References/Channel.qmd
+        - text: "Connector"
+          href: References/Connector.qmd
+        - text: "CoordinateReferenceSystem"
+          href: References/CoordinateReferenceSystem.qmd
+        - text: "CouplingCondition"
+          href: References/CouplingCondition.qmd
+        - text: "Enclosure"
+          href: References/Enclosure.qmd
+        - text: "ExternalResource"
+          href: References/ExternalResource.qmd
+        - text: "FiberArray"
+          href: References/FiberArray.qmd
+        - text: "FiberSegment"
+          href: References/FiberSegment.qmd
+        - text: "Geometry"
+          href: References/Geometry.qmd
+        - text: "Interrogator"
+          href: References/Interrogator.qmd
+        - text: "Inventory"
+          href: References/Inventory.qmd
+        - text: "Network"
+          href: References/Network.qmd
+        - text: "OpticalComponent"
+          href: References/OpticalComponent.qmd
+        - text: "OpticalPath"
+          href: References/OpticalPath.qmd
+        - text: "OpticalPathAnnotation"
+          href: References/OpticalPathAnnotation.qmd
+        - text: "References"
+          href: References/References.qmd
+        - text: "Response"
+          href: References/Response.qmd
+        - text: "Splice"
+          href: References/Splice.qmd
+        - text: "Station"
+          href: References/Station.qmd
+        - text: "Terminator"
+          href: References/Terminator.qmd
+    - id: examples
+      title: "Examples"
       style: "floating"
       collapse-level: 2
       contents:
         - text: "Overview"
-          href: scenarios/index.qmd
-        - text: "Sidecar Inventory"
-          href: scenarios/sidecar.qmd
-        - text: "Patch Enrichment"
-          href: scenarios/enrichment.qmd
-        - text: "Geometry And Coupling"
-          href: scenarios/geometry-coupling.qmd
-        - text: "Revisions Over Time"
-          href: scenarios/revisions.qmd
+          href: Examples/index.qmd
+        - text: "Simple Inventory"
+          href: Examples/simple-inventory.qmd
+        - text: "Tunnel Deployment"
+          href: Examples/tunnel.qmd
+        - text: "NORFOX"
+          href: Examples/norfox.qmd
+    - id: qa
+      title: "Q&A"
+      style: "floating"
+      collapse-level: 2
+      contents:
+        - text: "Overview"
+          href: Q&A/index.qmd
+        - text: "Open Questions"
+          href: Q&A/open-questions.qmd
     - id: api
       title: "API"
       style: "floating"
       collapse-level: 2
       contents:
-        - text: "Conceptual API"
-          href: api/index.qmd
-        - text: "Manifest Shape"
-          href: api/manifest.qmd
-        - text: "Object Reference"
-          href: api/objects.qmd
+        - text: "Spool"
+          href: API/spool.qmd
+        - text: "Inventory"
+          href: API/inventory.qmd
+        - text: "FiberArray"
+          href: API/fiber-array.qmd
+        - text: "OpticalPath"
+          href: API/optical-path.qmd

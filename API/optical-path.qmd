@@ -1,0 +1,60 @@
+---
+title: "OpticalPath"
+sidebar: api
+---
+
+`OpticalPath` is the ordered optical-distance model used to project physical metadata onto DAS data. It is linked from a `FiberArray`, carries time validity, and can be operated on directly before being placed back into an `Inventory`.
+
+## Responsibilities
+
+- Store ordered optical components such as fiber segments, connectors, splices, and terminators.
+- Store geometry, coupling, and annotation tracks along optical distance.
+- Resolve coordinates using the path CRS and geometry track.
+- Validate that populated interval tracks match the optical component length.
+- Support path editing operations such as distance selection, splitting, reversing, concatenation, and revision.
+
+## Path Operations
+
+```python
+from dascore.core.inventory import OpticalPath
+
+path = fiber_array.optical_paths[0]
+
+short_path = path.select(distance=(100.0, 500.0))
+left, right = path.split_at(250.0)
+reversed_path = path.reverse()
+joined_path = left + right
+
+path.validate()
+```
+
+`select(distance=(start, stop))` clips optical components, geometries, coupling conditions, and annotations to the requested optical-distance interval. Open bounds can use `None`.
+
+`split_at(distance)` returns the two selected path pieces on either side of the split distance.
+
+`reverse()` reverses ordered tracks and rewrites annotation distances against the reversed path.
+
+`path_a + path_b` concatenates two paths when their CRS definitions match.
+
+`validate()` checks that geometry and coupling track lengths agree with the optical component length and that annotations stay within path bounds.
+
+## Patch Projection
+
+Patch-level inventory methods resolve the valid optical path from the patch `data_source_id` and patch time:
+
+```python
+patch = patch.distance_from_inventory(inventory, dim="channel")
+
+patch = patch.add_inventory_coords(
+    inventory,
+    coords=("label", "x", "y", "z", "optical_component.name"),
+    on_boundary="warn",
+    on_missing="nan",
+)
+```
+
+Coordinate requests can include geometry axes such as `x`, `y`, `z`, `latitude`, `longitude`, and `elevation`; annotation labels via `label`; and interval metadata from qualified tracks such as `optical_component.name`, `geometry.name`, `coupling_condition.coupling_type`, or `annotation.label`.
+
+## Design Rule
+
+`OpticalPath` is not the raw channel table. Acquisition metadata maps channel or index coordinates into optical distance; the path then maps optical distance into geometry, annotations, coupling, and optical-component context.

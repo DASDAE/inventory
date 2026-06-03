@@ -1,0 +1,16 @@
+---
+title: "Open Questions"
+sidebar: qa
+---
+
+This page tracks design questions that are not settled yet.
+
+::: {.callout-note collapse="true"}
+## Should conduit remain a standalone object?
+
+Current direction: no. Model conduit as an [Enclosure](../References/Enclosure.qmd) with `enclosure_type: conduit`, `pipe`, `duct`, `casing`, `borehole`, or `tray`.
+
+This keeps physical containment in one resource family while still preserving material, diameter, ownership, and specification metadata for pipes and ducts.
+
+:::
+

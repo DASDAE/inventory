@@ -1,0 +1,50 @@
+---
+title: "DASDAE Inventory"
+sidebar: model
+---
+
+The following describes the DASDAE Inventory, which captures the observing system around generated DFOS data. Importantly, it matches the same abstraction layering as StationXML.
+
+## Inventory Tree
+
+::: {.render_data_model spec="../specs/dasdae-inventory.yml"}
+:::
+
+`Inventory` is the main object which manages the other objects, as well as an IO and update interface.
+
+`References` is a mapping of shareable resources, with a resource identifier as a key and the shareable object as the value. Objects that can be shared across the tree use stable `resource_id` values and live here. Examples include interrogators, cables, enclosures, external documents, etc.
+
+`CRS` is the coordinate reference system. It governs the semantics of all coordinate values contained in the inventory. It should default to standard global coordinate already used by StationXML (e.g., EPSG:4979) so if not defined it will behave how users expect. However, it can be overwritten for exceptional deployment conditions (eg laboratory, underground mines, etc.). .
+
+A `Network` is a coded container for monitoring regions.
+
+`Station` represents a point-like monitoring domain, it is essentially the same as in XML, but with broader coordinate system support.
+
+`FiberArray` represents a distributed, fiber-based monitoring domain. It has a sequence of `OpticalPath`s, which can vary over time, and a sequence of `Acquisition`.
+
+The `OpticalPath`, described in more detail in [the next section](optical-path.qmd), tracks the optical components, coupling conditions, geometry, and annotations.
+
+`Acquisition` is a coded object that describes the instrument configuration that produced observations on the `FiberArray`. Any number of `Acquisition`s can be associated with a single `FiberArray`. Multiple acquisitions would be used when one interrogator simultaneously records data with several gauge lengths, or raw-time series data plus derived products such as frequency band extracted or decimated time series data. A new `Acquisition` might also represent another interrogator plugged into the same optical path later on, or a change in interrogator configuration. `Acquisition` contains the `location_code` parameter, which is useful if different acquisitions define different zones of the same optical path.
+
+The acquisition code is similar to the channel code from StationXML. Although the exact meaning of this code needs to be worked out, GEOFON recommends channel codes such as `HSF` or `FSF` depending on sampling rate ([GEOFON DAS guidelines](https://geofon.gfz.de/redmine/projects/redmine/wiki/DAS)).
+
+## Linking Patches to Acquisitions
+
+Patches (time-series data) do not directly embed the inventory. They carry a `data_source_id` composed of:
+
+```text
+network.fiber_array.location.acquisition
+```
+
+That identifier resolves to the relevant `FiberArray` and `Acquisition` for a patch time. Likewise, channels in StationXML are resolved using `network.station.location.channel`. This makes a patch portable and keeps large or revised inventory context outside the patch until a user explicitly asks to add it.
+
+These do not need to be added to native DAS files directly but can be conveniently placed next to DAS data archives as discussed in the [Spool API section](../API/spool.qmd).
+
+
+## Model Constraints
+
+- No more than one `OpticalPath` is valid for a given time.
+- Station codes must be distinct from FiberArray codes.
+- Resource IDs must be unique across shareable resources.
+- `data_source_id` parts must resolve to exactly one `Network`, `FiberArray`, and `Acquisition` for the requested patch time.
+- Acquisition `(location_code, code)` pairs must be unique within a `FiberArray` for overlapping time ranges.

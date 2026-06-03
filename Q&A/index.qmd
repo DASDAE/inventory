@@ -1,0 +1,271 @@
+---
+title: "Q&A"
+sidebar: qa
+---
+
+This page collects design questions that clarify how the inventory model should be used.
+
+::: {.callout-note collapse="true"}
+## When should something be an OpticalComponent instead of a container?
+
+Use an [OpticalComponent](../References/OpticalComponent.qmd) for something the light passes through in optical-distance order. Use a container for physical housing, protection, or assembly context.
+
+For example, a fiber interval belongs in the ordered optical path:
+
+```yaml
+optical_components:
+  - type: FiberSegment
+    name: Sensing fiber interval
+    optical_length: 300.0
+    container: sensing_cable
+```
+
+The cable, pipe, conduit, or splice box that contains or houses the component is modeled separately:
+
+```yaml
+resources:
+  sensing_cable:
+    type: Cable
+    name: Solifos BRUsens DAS AC3
+
+  splice_box_01:
+    type: Enclosure
+    name: Splice box 01
+    enclosure_type: splice_box
+```
+
+This keeps the optical path sequence focused on optical propagation while preserving physical asset metadata.
+
+:::
+
+::: {.callout-note collapse="true"}
+## How do Geometry, CouplingCondition, and OpticalComponent intervals relate?
+
+They are independent interval tracks over optical distance.
+
+[OpticalComponent](../References/OpticalComponent.qmd) describes what the light passes through. [Geometry](../References/Geometry.qmd) describes where the optical path is. [CouplingCondition](../References/CouplingCondition.qmd) describes acoustic or mechanical coupling. Their boundaries often differ.
+
+```yaml
+optical_components:
+  - type: FiberSegment
+    name: Sensing cable
+    optical_length: 720.0
+
+geometries:
+  - name: East trench
+    optical_length: 300.0
+  - name: North trench
+    optical_length: 120.0
+  - name: Surface run
+    optical_length: 300.0
+
+coupling_conditions:
+  - coupling_type: trench
+    attachment: direct_burial
+    optical_length: 420.0
+  - coupling_type: surface
+    attachment: loose
+    optical_length: 300.0
+```
+
+The only requirement is that each track is internally ordered and meaningful over the optical path distance axis.
+
+:::
+
+::: {.callout-note collapse="true"}
+## How should unknown sections be represented?
+
+Use an interval with `optical_length` and leave the unknown descriptive fields unset.
+
+```yaml
+geometries:
+  - name: Unknown lead-in geometry
+    optical_length: 50.0
+
+coupling_conditions:
+  - optical_length: 50.0
+```
+
+This is better than pretending the metadata is known. The unknown interval still preserves the optical-distance budget, so later geometry or coupling updates can replace it without shifting the rest of the path.
+
+:::
+
+::: {.callout-note collapse="true"}
+## How should fiber breaks or repairs be represented?
+
+Treat breaks and repairs as changes in time-valid optical paths.
+
+Close the old [OpticalPath](../References/OpticalPath.qmd) with an `end_time`, then add a new path with a `start_time`. Keep both under the same [FiberArray](../References/FiberArray.qmd) when they represent the same observing identity.
+
+```yaml
+fiber_arrays:
+  - code: SIMP
+    optical_paths:
+      - name: Original path
+        start_time: "2026-06-01"
+        end_time: "2026-06-12T10:30:00"
+      - name: Repaired path
+        start_time: "2026-06-12T10:30:00"
+```
+
+This preserves history and lets patches resolve the path that was valid at their acquisition time.
+
+:::
+
+::: {.callout-note collapse="true"}
+## What belongs in Acquisition instead of FiberArray?
+
+[FiberArray](../References/FiberArray.qmd) owns the durable observing identity: network-style code, optical paths, and the fact that this is a named fiber array.
+
+[Acquisition](../References/Acquisition.qmd) owns data-stream configuration: location code, acquisition code, data type, units, interrogator, sample rate, gauge length, spatial interval, and start distance.
+
+```yaml
+fiber_arrays:
+  - code: SIMP
+    name: Simple trench array
+    acquisitions:
+      - code: RAW
+        location_code: ""
+        data_category: DAS
+        data_type: strain
+        sample_rate: 250.0
+        gauge_length: 2.0
+```
+
+If the same physical fiber array is recorded with multiple gauge lengths or processed products, use multiple acquisitions under the same fiber array.
+
+:::
+
+::: {.callout-note collapse="true"}
+## How should coordinates work?
+
+All coordinate-bearing inventory objects are interpreted using the inventory-level [CoordinateReferenceSystem](../References/CoordinateReferenceSystem.qmd).
+
+The CRS defines `coordinate_labels`, such as:
+
+```yaml
+coordinate_reference_system:
+  authority: EPSG
+  code: 4979
+  name: WGS 84 3D
+  coordinate_labels: [longitude, latitude, elevation]
+  units: [degree, degree, meter]
+```
+
+Point-like objects such as [Station](../References/Station.qmd) and [Channel](../References/Channel.qmd) can use a generic `coordinates` tuple ordered by those labels:
+
+```yaml
+stations:
+  - code: VA01
+    coordinates: [2.103905, 48.807461, 115.0]
+```
+
+They can also use dynamic fields matching `coordinate_labels`. For a geographic CRS, `latitude`, `longitude`, and `elevation` are still valid:
+
+```yaml
+stations:
+  - code: VA01
+    longitude: 2.103905
+    latitude: 48.807461
+    elevation: 115.0
+```
+
+Fiber geometry uses the same CRS, but stores coordinate sequences along optical distance:
+
+```yaml
+geometries:
+  - optical_length: 300.0
+    distance: [50.0, 350.0]
+    coordinates:
+      - [2.103905, 48.807461, 115.0]
+      - [2.108000, 48.807461, 115.0]
+```
+
+:::
+
+::: {.callout-note collapse="true"}
+## How should a cable inside a pipe be represented?
+
+Use limited nested containers. The light still passes through a [FiberSegment](../References/FiberSegment.qmd), the fiber segment is in a [Cable](../References/Cable.qmd), and the cable can be inside an [Enclosure](../References/Enclosure.qmd) with `enclosure_type: pipe` or `enclosure_type: conduit`.
+
+```yaml
+resources:
+  pipe_01:
+    type: Enclosure
+    name: North access pipe
+    enclosure_type: pipe
+    material: steel
+    inner_diameter: 0.10
+
+  sensing_cable:
+    type: Cable
+    name: Solifos BRUsens DAS AC3
+    container: pipe_01
+```
+
+The optical path remains focused on what light passes through:
+
+```yaml
+optical_components:
+  - type: FiberSegment
+    name: Fiber inside sensing cable
+    optical_length: 1200.0
+    container: sensing_cable
+```
+
+Coupling stays interval-specific:
+
+```yaml
+coupling_conditions:
+  - optical_length: 1200.0
+    coupling_type: conduit
+    attachment: loose
+    medium: steel
+```
+
+This separates physical containment from acoustic or mechanical coupling.
+
+:::
+
+::: {.callout-note collapse="true"}
+## How should fiber coils or clumps be represented?
+
+Represent coils, slack loops, and compact clumps as ordinary optical path length with compact physical geometry.
+
+The light still passes through a [FiberSegment](../References/FiberSegment.qmd), so the coil belongs in the ordered optical components. The geometry can be point-like even when the optical interval is long: use repeated or nearly identical coordinates for the start and end of the interval.
+
+```yaml
+optical_components:
+  - type: FiberSegment
+    name: Vault 2 slack coil
+    optical_length: 100.0
+    container: sensing_cable
+    notes: Coiled slack fiber in vault.
+
+geometries:
+  - name: Vault 2 coil location
+    optical_length: 100.0
+    distance: [0.0, 100.0]
+    coordinates:
+      - [500.0, 120.0, 0.0]
+      - [500.0, 120.0, 0.0]
+```
+
+Add coupling or annotation metadata so downstream consumers know this is intentional compact geometry, not missing survey detail:
+
+```yaml
+coupling_conditions:
+  - optical_length: 100.0
+    coupling_type: coiled
+    attachment: loose
+
+annotations:
+  - distance: 1200.0
+    optical_length: 100.0
+    label: slack coil
+    notes: Stored coil, not intended as sensing fiber.
+```
+
+This avoids adding a special coil class while preserving the optical-distance budget and the physical interpretation.
+
+:::

@@ -1,0 +1,9 @@
+---
+title: "Changelog"
+sidebar: intro
+---
+
+## Unreleased
+
+- Model conduit as an [Enclosure](../References/Enclosure.qmd) type instead of a standalone reference object.
+- Add an Open Questions page under Q&A.
