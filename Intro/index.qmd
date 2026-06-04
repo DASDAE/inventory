@@ -74,11 +74,11 @@ However, as the experiment progresses, different versions and revisions of the m
 <button class="why-not-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#why-not-prodml" aria-expanded="false" aria-controls="why-not-prodml">PRODML</button>
 
 ::: {#why-not-prodml .collapse}
-In some industries, DFOS metadata has been integrated into broader domain standards, such as Energistics [PRODML](https://energistics.org/prodml-developers-users). PRODML works well within an oil and gas production context, including DAS/DTS use cases, but it does not fit naturally as a general-purpose format for non-oil/gas experiments common in seismology. For example:
+In some industries, DFOS metadata has been integrated into broader domain standards, such as Energistics' [PRODML](https://energistics.org/prodml-developers-users). PRODML works well within an oil and gas production context, including DAS/DTS use cases, but it does not fit naturally as a general-purpose format for non-oil/gas experiments common in seismology. For example PRODML is:
 
   - Built for upstream oil/gas production, not standalone DFOS or seismology.
   - Embedded in a broader wells, pipelines, facilities, flow-test, PVT, and production-volume model.
-  - Assumes the Energistics XML/EPC/HDF5/reference stack.
+  - Assumes the Energistic's XML/EPC/HDF5/reference stack.
   - Useful for oilfield exchange, but heavy for general DFOS deployments.
 
 Even if PRODML is a bit heavy to adopt wholesale for DASDAE's metadata model, it has useful patterns:
@@ -100,7 +100,7 @@ Even if PRODML is a bit heavy to adopt wholesale for DASDAE's metadata model, it
 
 ::: {.signal}
 ### Weaknesses
-- Too domain-specific for general purpose DFOS use
+- Too domain-specific for general-purpose DFOS use
 - Too much packaging and schema weight for lightweight metadata
 :::
 :::
@@ -127,9 +127,9 @@ StationXML defines a hierarchy of objects:
 ::: {.render_data_model spec="../specs/stationxml.yml"}
 :::
 
-So, the abstraction layering progresses from a collection of monitoring regions, a single monitoring region, to instrument specific information. This is encoded in the canonical time series identifier (seed code): {network}.{station}.{location}.{channel}. This is helpful in the DFOS context, but not broad enough to cover a distributed (non-point) monitoring region.
+So, the abstraction layering progresses from a collection of monitoring regions, to a single monitoring region, to instrument-specific information. This is encoded in the canonical time-series identifier (seed code): {network}.{station}.{location}.{channel}. This is helpful in the DFOS context, but not broad enough to cover a distributed (non-point) monitoring region.
 
-Another weakness of StationXML, acutely felt by industrial/labratory seismologists, is the lack of support for a non-global coordinate systems.
+Another weakness of StationXML, acutely felt by industrial/laboratory seismologists, is the lack of support for non-global coordinate systems.
 
 ::: {.signal-grid}
 ::: {.signal}
@@ -142,7 +142,7 @@ Another weakness of StationXML, acutely felt by industrial/labratory seismologis
 
 ::: {.signal}
 ### Weaknesses
-- No support for fiber-optic monitoring domains or instruments configuration
+- No support for fiber-optic monitoring domains or instrument configuration
 - Limited reusability of components (e.g., strictly hierarchical)
 - Fixed coordinate reference system
 :::
@@ -192,7 +192,7 @@ Moreover, often experiments couple both seismic and non-seismic instruments in t
 ### Weaknesses
 - Lacks instrument-independent monitoring region abstraction
 - Limited support for describing optical paths and their time-varying nature
-- Doesn't support storing non-DAS (seismic) instruments that may be analyzed together
+- Does not support storing non-DAS (seismic) instruments that may be analyzed together
 :::
 :::
 
@@ -230,7 +230,7 @@ The DASDAE inventory aims to solve the problems with:
 At a glance, it looks like this:
 
 :::{.callout-note}
-Hover over an element to see more details, and click to expands its children (if any).
+Hover over an element to see more details, and click to expand its children (if any).
 :::
 
 ::: {.render_data_model spec="../specs/dasdae-inventory.yml"}

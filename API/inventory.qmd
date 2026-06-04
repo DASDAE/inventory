@@ -83,7 +83,7 @@ inventory = dc.Inventory(
 )
 ```
 
-This inventory can resolve patches whose data source id is:
+This inventory can resolve patches whose data source ID is:
 
 ```text
 DAS.L001.01.RAW
@@ -108,10 +108,10 @@ corrected_acquisition = acquisition.new(
 inventory_v2 = inventory.replace(acquisition, corrected_acquisition)
 ```
 
-The same pattern applies to optical path revisions. For example if a fiber breaks, one can discover the break by looking at continuous files, fix the endtime for the old `OpticalPath` and add the new optical path as the current one.
+The same pattern applies to optical path revisions. For example, if a fiber breaks, one can discover the break by looking at continuous files, fix the `end_time` for the old `OpticalPath`, and add the new optical path as the current one.
 
 ```python
-fiber_array = inventory.networks[0].fiber_arrays[0] 
+fiber_array = inventory.networks[0].fiber_arrays[0]
 opath = fiber_array.optical_paths[-1]
 
 break_time = "2024-05-12T10:30:00.12"

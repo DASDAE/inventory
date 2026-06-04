@@ -18,7 +18,7 @@ The tap test defines four points along the sensing fiber. Coordinates are WGS84 
 | Point | Description | Optical Distance (m) | Latitude | Longitude | Elevation (m) |
 |---|---|---:|---:|---:|---:|
 | A | Start of sensing fiber after E2000 coupler | 50 | 48.807461 | 2.103905 | 115 |
-| B | 90 degree bend in trenched section | 350 | 48.807461 | 2.108000 | 115 |
+| B | 90-degree bend in trenched section | 350 | 48.807461 | 2.108000 | 115 |
 | C | Cable exits trench and becomes loose | 470 | 48.808539 | 2.108000 | 115 |
 | D | End of loose surface-laid section | 770 | 48.808539 | 2.112095 | 115 |
 
@@ -35,7 +35,7 @@ The deployment uses a telemetry (lead-in) cable to connect to a separate sensing
 
 ## Build The Inventory
 
-Start by transcribing the field notes into a table. This gives the inventory a single source for geometry and distance intervals. Normally one would probably just read this from a CSV. 
+Start by transcribing the field notes into a table. This gives the inventory a single source for geometry and distance intervals. Normally one would probably just read this from a CSV.
 
 ```python
 import pandas as pd
@@ -45,7 +45,7 @@ tap_points = pd.DataFrame(
         "point": ["A", "B", "C", "D"],
         "description": [
             "Start of sensing fiber after E2000 coupler",
-            "90 degree bend in trenched section",
+            "90-degree bend in trenched section",
             "Cable exits trench and becomes loose",
             "End of loose surface-laid section",
         ],
@@ -94,7 +94,7 @@ acquisition = inv.Acquisition(
 
 The lead-in cable, sensing cable, and E2000 coupler are independent resources. The optical path can refer to them without duplicating metadata.
 
-The inventory implementation generates unique internal ids automatically.
+The inventory implementation generates unique internal IDs automatically.
 
 ```python
 telemetry_cable = inv.Cable(
@@ -243,4 +243,4 @@ inventory = inv.Inventory(
 )
 ```
 
-The shareable resources (cable, enclosures), can be manually added to the Inventory's resources, but if not, they will be populated automatically with the inventory creation. 
+The shareable resources (cable, enclosures) can be manually added to the Inventory's resources, but if not, they will be populated automatically when the inventory is created.

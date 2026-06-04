@@ -27,6 +27,7 @@ website:
   title: "DASDAE Inventory (v0.0.1)"
   site-url: "https://dasdae.github.io/inventory"
   repo-url: "https://github.com/DASDAE/inventory"
+  repo-actions: [edit]
   page-navigation: true
   navbar:
     background: light

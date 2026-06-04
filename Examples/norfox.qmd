@@ -4,10 +4,10 @@ sidebar: examples
 ---
 
 :::{.callout-warning}
-This example is still under development, dont read too closely yet.
+This example is still under development; don't read too closely yet.
 :::
 
-This example sketches a DASDAE inventory for the [NORFOX fibre-optic array](https://www.norsar.no/data/norfox-fibre-optic-array-data), a five-arm fiber-optic deployment at NORSAR's Stendammen test site. The goal is to show how a complex public deployment can be represented by the DASDAE Inventory. Some liberty is taken with certain details as the point of the exercise is for demonstration, not 100% accuracy.   
+This example sketches a DASDAE inventory for the [NORFOX fibre-optic array](https://www.norsar.no/data/norfox-fibre-optic-array-data), a five-arm fiber-optic deployment at NORSAR's Stendammen test site. The goal is to show how a complex public deployment can be represented by the DASDAE Inventory. Some liberties are taken with certain details, as the point of the exercise is demonstration, not exact accuracy.
 
 ![NORFOX cable path and NORES stations, from the NORSAR NORFOX data page](https://www.norsar.no/getfile.php/1319603-1696855994/Filer/Map_v1%281%29.jpg%20%28content%29.jpg){#fig-norfox-cable-path fig-cap="[NORFOX cable path and NORES stations](https://www.norsar.no/data/norfox-fibre-optic-array-data), image hosted by NORSAR."}
 

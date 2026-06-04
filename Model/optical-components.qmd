@@ -5,7 +5,7 @@ sidebar: model
 
 Optical components describe the ordered physical pieces that form an `OpticalPath`. They answer the question: what does the light pass through as optical distance increases?
 
-Each component has an optical length and a component type. Components may link to a shareable resources such as `Cable` or `Enclosure` when the same physical asset needs to be described once and potentially reused. Containers can be nested in limited, explicit ways, such as a `Cable` inside an `Enclosure` with `enclosure_type="conduit"`, but a container is not itself an optical component.
+Each component has an optical length and a component type. Components may link to shareable resources such as `Cable` or `Enclosure` when the same physical asset needs to be described once and potentially reused. Containers can be nested in limited, explicit ways, such as a `Cable` inside an `Enclosure` with `enclosure_type="conduit"`, but a container is not itself an optical component.
 
 ## Component Types
 
