@@ -20,7 +20,7 @@ A `Network` is a coded container for monitoring regions.
 
 `Station` represents a point-like monitoring domain. It is essentially the same as in StationXML, but with broader coordinate system support.
 
-`FiberArray` represents a distributed, fiber-based monitoring domain. It has a sequence of `OpticalPath`s, which can vary over time, and a sequence of `Acquisition` objects.
+`FiberArray` represents a distributed, fiber-based monitoring domain. Each `FiberArray` describes exactly one optical route: its `optical_paths` are non-overlapping time revisions of that route's description, and its `Acquisition` objects record the instrument configurations that produced data on it. Deployments with several concurrent routes (e.g., multiple arms radiating from one site) are represented as several `FiberArray`s, which can share physical resources such as interrogators and cables through `References`.
 
 The `OpticalPath`, described in more detail in [the next section](optical-path.qmd), tracks the optical components, coupling conditions, geometry, and annotations.
 
@@ -43,7 +43,7 @@ These do not need to be added to native DAS files directly but can be convenient
 
 ## Model Constraints
 
-- No more than one `OpticalPath` is valid for a given time.
+- Within a `FiberArray`, no more than one `OpticalPath` is valid for a given time: path validity windows must not overlap.
 - Station codes must be distinct from FiberArray codes.
 - Resource IDs must be unique across shareable resources.
 - `data_source_id` parts must resolve to exactly one `Network`, `FiberArray`, and `Acquisition` for the requested patch time.

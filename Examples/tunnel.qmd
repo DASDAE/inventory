@@ -27,7 +27,7 @@ $$
 
 There is a buried cable loop of approximately 10 m with a diameter of 1 m designed to be a horizontally sensitive "clump" sensor.
 
-In total, there are two optical paths: one intended for a Febus G1 Brillouin DSS system (called PDSS) and the other for a Sintela Onyxia DAS Rayleigh interrogator (called PDAS).
+The deployment uses two concurrent optical routes, so it is represented as two `FiberArray`s: `PDSS`, intended for a Febus G1 Brillouin DSS system, and `PDAS`, for a Sintela Onyxia DAS Rayleigh interrogator. Each fiber array has exactly one valid optical path at a time; the two routes run through different fibers of the same physical cables, which are shared resources referenced by both arrays.
 
 ## Deployment tables
 

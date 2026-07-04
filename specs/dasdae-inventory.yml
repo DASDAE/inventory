@@ -169,7 +169,7 @@ nodes:
   FA:
     label: FiberArray
     style_class: monitoring
-    summary: Durable fiber-optic observing identity anchored by one or more optical paths.
+    summary: Durable identity of a single optical route, described by non-overlapping time revisions of its optical path.
     attributes:
       - name: code
         type: str
@@ -188,7 +188,7 @@ nodes:
         description: Acquisitions associated with this fiber array.
       - name: optical_paths
         type: tuple[OpticalPath, ...]
-        description: Optical paths associated with this fiber array.
+        description: Time-ordered revisions of this fiber array's optical path; validity windows must not overlap.
       - name: notes
         type: str
         description: Additional notes.
@@ -409,10 +409,10 @@ nodes:
         description: Human-readable optical path name.
       - name: start_time
         type: datetime64
-        description: Start time for which this metadata item is valid.
+        description: Start time for which this path revision is valid; must not overlap other revisions in the same fiber array.
       - name: end_time
         type: datetime64
-        description: End time for which this metadata item is valid.
+        description: End time for which this path revision is valid; must not overlap other revisions in the same fiber array.
       - name: optical_components
         type: tuple[OpticalComponent, ...]
         description: Ordered optical components on this path.
