@@ -205,6 +205,30 @@
     runLayout(cy);
   }
 
+  function observeResize(target, cy) {
+    if (!window.ResizeObserver) {
+      return;
+    }
+    let debounce = null;
+    let lastWidth = target.clientWidth;
+    let lastHeight = target.clientHeight;
+    const observer = new ResizeObserver(() => {
+      if (target.clientWidth === lastWidth && target.clientHeight === lastHeight) {
+        return;
+      }
+      lastWidth = target.clientWidth;
+      lastHeight = target.clientHeight;
+      if (debounce) {
+        window.clearTimeout(debounce);
+      }
+      debounce = window.setTimeout(() => {
+        cy.resize();
+        fitVisibleGraph(cy);
+      }, 150);
+    });
+    observer.observe(target);
+  }
+
   function setCollapsed(cy, node, collapsed, relayout = true) {
     node.data("collapsed", collapsed);
     const descendants = childClosure(node);
@@ -345,6 +369,7 @@
       applyInitialCollapse(cy);
       attachTooltips(cy, target);
       addToolbar(container, cy);
+      observeResize(target, cy);
     }
   }
 

@@ -390,7 +390,9 @@ pre code {
 }
 
 .render-data-model-graph {
-  overflow-x: auto;
+  /* The graph pans inside the canvas; container scrollbars are never useful
+     and flicker when the canvas rounds to 1px larger than the container. */
+  overflow: hidden;
   width: 100%;
   height: min(68vh, 640px);
   min-height: 420px;
