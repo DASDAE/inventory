@@ -34,4 +34,4 @@ patch = patch.add_inventory_coords(
 
 ## Design Rule
 
-`FiberArray` identifies the observing system. Acquisition settings and path interpretation can change over time without changing the durable fiber-array identity.
+`FiberArray` is the durable identity of a single optical route; its `OpticalPath`s are non-overlapping time revisions of that route's description. Acquisition settings and path interpretation can change over time without changing the durable fiber-array identity. Concurrent routes are separate `FiberArray`s.

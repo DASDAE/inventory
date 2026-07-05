@@ -108,7 +108,7 @@ corrected_acquisition = acquisition.new(
 inventory_v2 = inventory.replace(acquisition, corrected_acquisition)
 ```
 
-The same pattern applies to optical path revisions. For example, if a fiber breaks, one can discover the break by looking at continuous files, fix the `end_time` for the old `OpticalPath`, and add the new optical path as the current one.
+The same pattern applies to optical path revisions. Within a fiber array, optical paths are non-overlapping time revisions of one route, so a repair or break closes the current revision and adds a new one. For example, if a fiber breaks, one can discover the break by looking at continuous files, set the `end_time` of the current `OpticalPath`, and add the shortened path as the new valid revision.
 
 ```python
 fiber_array = inventory.networks[0].fiber_arrays[0]
@@ -117,19 +117,17 @@ opath = fiber_array.optical_paths[-1]
 break_time = "2024-05-12T10:30:00.12"
 break_distance = 600.0
 
-closed_opath = opath.new(end_time=break_time)
+closed_opath = opath.new(
+    end_time=break_time,
+    notes="Fiber break at 600 m.",
+)
 new_opath = (
-    opath.split(break_distance)[0]
+    opath.split_at(break_distance)[0]
     .new(start_time=break_time)
 )
 
-left, right = path.split_at(650.0)
-shortened_path = left.new(
-    end_time="2024-05-12T10:30:00",
-    notes="Fiber break after 650 m.",
-)
 new_fiber_array = fiber_array.new(
-    optical_paths = (
+    optical_paths=(
         fiber_array.optical_paths[:-1] + (closed_opath, new_opath)
     )
 )
@@ -141,7 +139,7 @@ Or through a convenience function:
 
 ```python
 inventory_v2 = inventory.register_fiber_break(
-    source_id="AA.F023.01.HRS", time=break_time, distance=break_distance
+    source_id="DAS.L001.01.RAW", time=break_time, distance=break_distance
 )
 ```
 
@@ -169,3 +167,5 @@ patch = patch.add_inventory_coords(
 The patch remains lightweight until these methods are called. The inventory stays external, versionable, and reusable across many files.
 
 ## Design Rule
+
+`Inventory` is the single serialized source of metadata truth. Patches carry only a `data_source_id`; all richer context is resolved through the inventory on request, so metadata can be revised without rewriting data files.

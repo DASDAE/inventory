@@ -14,8 +14,8 @@ Aliases: `Path`
 | Name | Type | Description |
 |---|---|---|
 | `name` | str | Human-readable optical path name. |
-| `start_time` | datetime64 | Start time for which this metadata item is valid. |
-| `end_time` | datetime64 | End time for which this metadata item is valid. |
+| `start_time` | datetime64 | Start time for which this path revision is valid; must not overlap other revisions in the same fiber array. |
+| `end_time` | datetime64 | End time for which this path revision is valid; must not overlap other revisions in the same fiber array. |
 | `optical_components` | tuple[[OpticalComponent](OpticalComponent.qmd), ...] | Ordered optical components on this path. |
 | `geometries` | tuple[[Geometry](Geometry.qmd), ...] | Ordered geometries on this path. |
 | `coupling_conditions` | tuple[[CouplingCondition](CouplingCondition.qmd), ...] | Ordered coupling conditions on this path. |

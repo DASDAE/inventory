@@ -38,14 +38,14 @@ patch = raw[0]
 patch = patch.distance_from_inventory(inventory, dim="channel")
 
 # Add attributes from relevant acquisition
-patch = patch.add_acquisition_attrs(
+patch = patch.add_inventory_attrs(
     inventory,
     attrs=("tag", "sample_rate", "interrogator.model"),
 )
 
 # Add coords from fiber array
-patch = patch.add_coords(
-    inventory=inventory,
+patch = patch.add_inventory_coords(
+    inventory,
     coords=("x", "y", "z"),
     on_missing="nan",
 )

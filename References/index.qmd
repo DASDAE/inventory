@@ -17,7 +17,7 @@ These pages are generated from `specs/dasdae-inventory.yml`.
 | [CouplingCondition](CouplingCondition.qmd) | Acoustic coupling condition for an interval of an optical path. |
 | [Enclosure](Enclosure.qmd) | Physical housing, assembly, pipe, duct, conduit, or carrier resource for optical components or cables. |
 | [ExternalResource](ExternalResource.qmd) | External resource identified by DASCore but not otherwise modeled. |
-| [FiberArray](FiberArray.qmd) | Durable fiber-optic observing identity anchored by one or more optical paths. |
+| [FiberArray](FiberArray.qmd) | Durable identity of a single optical route, described by non-overlapping time revisions of its optical path. |
 | [FiberSegment](FiberSegment.qmd) | Length of optical fiber within a cable, patch cord, borehole line, or other run. |
 | [Geometry](Geometry.qmd) | Geometry for an interval of an optical path, interpreted using the inventory CRS. |
 | [Interrogator](Interrogator.qmd) | DAS interrogator unit used for data collection. |
