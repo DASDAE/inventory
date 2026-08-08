@@ -14,7 +14,6 @@ Station-specific response model associated with a channel.
 | `sensitivity` | float \| None | Overall channel sensitivity. |
 | `input_units` | UnitQuantity \| None | Physical units before response conversion. |
 | `output_units` | UnitQuantity \| None | Physical units after response conversion. |
-| `stages` | tuple[ResponseStage, ...] | Ordered response stages such as gains, filters, or calibration transforms. |
 | `extra_fields` | dict[str, str \| int \| float \| bool] | Extra response metadata not represented by standardized fields. |
 
 ## Contains
