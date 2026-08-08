@@ -7,6 +7,10 @@ sidebar: references
 
 Time-aware, channel-like DAS acquisition setup used to resolve acquisition-derived patch metadata.
 
+::: {.note}
+(location_code, code) pairs are unique within a FiberArray for overlapping time ranges. Codes use letters, digits, and '-' only; location_code alone may be blank, as in FDSN. All times are UTC and validity intervals are half-open.
+:::
+
 Aliases: `Acq`
 
 ## Attributes
@@ -14,23 +18,27 @@ Aliases: `Acq`
 | Name | Type | Description |
 |---|---|---|
 | `code` | str | Channel-like acquisition code used in data_source_id. |
-| `location_code` | str | FDSN-style location code used to group or disambiguate acquisition streams. |
+| `location_code` | str | FDSN-style location code naming the optical path lineage this acquisition interrogates; may be blank, as in FDSN. |
+| `start_time` | datetime64 | Start time for which this acquisition is valid. |
+| `end_time` | datetime64 \| None | End time for which this acquisition is valid; None while ongoing. |
 | `data_type` | Literal[VALID_DATA_TYPES] | Quantity measured or produced by this acquisition. |
 | `data_category` | str | Acquisition family such as DAS, DTS, or DSS. |
 | `data_units` | UnitQuantity \| None | Units of data produced by this acquisition. |
 | `interrogator` | [Interrogator](Interrogator.qmd) \| None | Interrogator used for this acquisition. |
+| `interrogator_port` | str \| None | Instrument connector or launch port that fed this acquisition, for multiplexed interrogators. Descriptive only; it plays no role in resolution. |
 | `gauge_length` | float \| None | Gauge length used by the acquisition in meters. |
 | `pulse_rate` | float \| None | Pulse repetition rate in Hz. |
 | `pulse_width` | float \| None | Pulse width in seconds. |
 | `sample_rate` | float \| None | FDSN-style acquisition sample rate in Hz. |
-| `spatial_interval` | float \| None | Spatial sampling interval between channels in meters. |
-| `start_distance` | float | Optical path distance corresponding to channel or index position 0. |
+| `spatial_interval` | float \| None | Nominal spatial sampling interval between channels in meters. Descriptive instrument metadata; it participates in channel resolution only as the affine slope when no multi-point distance_map is present. |
+| `start_distance` | float \| None | Optical path distance corresponding to channel or index position 0. Mutually exclusive with distance_map. |
+| `distance_map` | [DistanceMap](DistanceMap.qmd) \| None | Measured map from interrogator-reported channels or distances onto optical path distance. Mutually exclusive with start_distance. |
 | `closed_fiber_loop` | bool | True when the interrogator is attached to both ends of the optical path. |
 | `extra_fields` | dict[str, str \| int \| float \| bool] | Extra acquisition metadata not represented by standardized fields. |
 
 ## Contains
 
-_None._
+- [DistanceMap](DistanceMap.qmd)
 
 ## Contained By
 

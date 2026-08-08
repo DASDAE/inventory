@@ -80,7 +80,7 @@ nodes:
   Station:
     label: Station
     style_class: monitoring
-    summary: Station-level observing identity used to group one or more fiber arrays under a network.
+    summary: Point-like observing identity under a network, hosting channels for non-fiber or colocated observations.
     note: Station coordinates are interpreted using Inventory.coordinate_reference_system. Dynamic coordinate fields matching CoordinateReferenceSystem.coordinate_labels are also accepted; for example latitude, longitude, and elevation still work when the CRS labels are appropriate.
     attributes:
       - name: code
@@ -93,17 +93,14 @@ nodes:
         type: datetime64
         description: Start time for which this station metadata is valid.
       - name: end_time
-        type: datetime64
-        description: End time for which this station metadata is valid.
+        type: datetime64 | None
+        description: End time for which this station metadata is valid; None while ongoing.
       - name: coordinates
         type: tuple[float, ...] | None
         description: Representative station coordinates ordered according to Inventory.coordinate_reference_system.coordinate_labels.
       - name: "<coordinate_label>"
         type: float
         description: Dynamic coordinate field named by CoordinateReferenceSystem.coordinate_labels, such as latitude, longitude, elevation, x, y, or z.
-      - name: fiber_arrays
-        type: tuple[FiberArray, ...]
-        description: Fiber arrays associated with this station.
       - name: channels
         type: tuple[Channel, ...]
         description: Station channels associated with this station.
@@ -127,8 +124,8 @@ nodes:
         type: datetime64
         description: Start time for which this channel metadata is valid.
       - name: end_time
-        type: datetime64
-        description: End time for which this channel metadata is valid.
+        type: datetime64 | None
+        description: End time for which this channel metadata is valid; None while ongoing.
       - name: coordinates
         type: tuple[float, ...] | None
         description: Channel coordinates ordered according to Inventory.coordinate_reference_system.coordinate_labels.
@@ -181,8 +178,8 @@ nodes:
         type: datetime64
         description: Start time for which this metadata item is valid.
       - name: end_time
-        type: datetime64
-        description: End time for which this metadata item is valid.
+        type: datetime64 | None
+        description: End time for which this metadata item is valid; None while ongoing.
       - name: acquisitions
         type: tuple[Acquisition, ...]
         description: Acquisitions associated with this fiber array.
@@ -197,13 +194,20 @@ nodes:
     display: Acquisition
     style_class: instrument
     summary: Time-aware, channel-like DAS acquisition setup used to resolve acquisition-derived patch metadata.
+    note: (location_code, code) pairs are unique within a FiberArray for overlapping time ranges. Codes use letters, digits, and '-' only; location_code alone may be blank, as in FDSN. All times are UTC and validity intervals are half-open.
     attributes:
       - name: code
         type: str
         description: Channel-like acquisition code used in data_source_id.
       - name: location_code
         type: str
-        description: FDSN-style location code used to group or disambiguate acquisition streams.
+        description: FDSN-style location code naming the optical path lineage this acquisition interrogates; may be blank, as in FDSN.
+      - name: start_time
+        type: datetime64
+        description: Start time for which this acquisition is valid.
+      - name: end_time
+        type: datetime64 | None
+        description: End time for which this acquisition is valid; None while ongoing.
       - name: data_type
         type: Literal[VALID_DATA_TYPES]
         description: Quantity measured or produced by this acquisition.
@@ -216,6 +220,9 @@ nodes:
       - name: interrogator
         type: Interrogator | None
         description: Interrogator used for this acquisition.
+      - name: interrogator_port
+        type: str | None
+        description: Instrument connector or launch port that fed this acquisition, for multiplexed interrogators. Descriptive only; it plays no role in resolution.
       - name: gauge_length
         type: float | None
         description: Gauge length used by the acquisition in meters.
@@ -230,16 +237,35 @@ nodes:
         description: FDSN-style acquisition sample rate in Hz.
       - name: spatial_interval
         type: float | None
-        description: Spatial sampling interval between channels in meters.
+        description: Nominal spatial sampling interval between channels in meters. Descriptive instrument metadata; it participates in channel resolution only as the affine slope when no multi-point distance_map is present.
       - name: start_distance
-        type: float
-        description: Optical path distance corresponding to channel or index position 0.
+        type: float | None
+        description: Optical path distance corresponding to channel or index position 0. Mutually exclusive with distance_map.
+      - name: distance_map
+        type: DistanceMap | None
+        description: Measured map from interrogator-reported channels or distances onto optical path distance. Mutually exclusive with start_distance.
       - name: closed_fiber_loop
         type: bool
         description: True when the interrogator is attached to both ends of the optical path.
       - name: extra_fields
         type: dict[str, str | int | float | bool]
         description: Extra acquisition metadata not represented by standardized fields.
+  DistMap:
+    label: DistanceMap
+    display: Distance map
+    style_class: instrument
+    summary: Measured control-point map from an acquisition's channel-like coordinate onto optical path distance.
+    note: A channel map is a function, not a roster. It answers where a channel would fall on the optical path; it does not list which channels exist. Values between control points are resolved by piecewise linear interpolation, and channels outside the covered range are undefined. Exactly one input axis is populated — channel when the interrogator reports channel numbers, instrument_distance when it reports its own nominal meters. A single-point map takes its interpolation slope from the acquisition's nominal spatial_interval.
+    attributes:
+      - name: channel
+        type: tuple[float, ...] | None
+        description: Interrogator-reported channel numbers at the control points; strictly increasing.
+      - name: instrument_distance
+        type: tuple[float, ...] | None
+        description: Interrogator-reported nominal distances at the control points in meters; strictly increasing.
+      - name: distance
+        type: tuple[float, ...]
+        description: Optical path distances at the control points in meters; strictly increasing.
   Int:
     label: Interrogator
     display: Interrogator
@@ -264,12 +290,6 @@ nodes:
       - name: instrument_type
         type: str
         description: General instrument category.
-      - name: lead_cable_length
-        type: float
-        description: Lead cable length for the interrogator.
-      - name: take_in_cable_length
-        type: float
-        description: Take-in cable length for closed-loop systems.
   Cable:
     label: Cable
     style_class: shareable_resource
@@ -315,6 +335,9 @@ nodes:
       - name: fiber_count
         type: int | None
         description: Number of fibers contained in the cable.
+      - name: notes
+        type: str
+        description: Additional notes.
   Enclosure:
     label: Enclosure
     style_class: shareable_resource
@@ -403,23 +426,30 @@ nodes:
     children: collapsed
     style_class: monitoring
     summary: Continuous optical path described by independent component, geometry, coupling, and annotation tracks.
+    note: No more than one OpticalPath per (FiberArray, location_code) is valid at a given time. Validity intervals are half-open and all times are UTC. Optical components tile [start_distance, start_distance + total component length).
     attributes:
       - name: name
         type: str
         description: Human-readable optical path name.
+      - name: start_distance
+        type: float
+        description: Origin of this path's optical-distance axis in meters; 0 for whole paths. Set by select and split_at so path pieces keep absolute optical distances.
+      - name: location_code
+        type: str
+        description: FDSN-style location code naming this path lineage within its fiber array; blank by default. Acquisitions sharing this location code interrogate this path.
       - name: start_time
         type: datetime64
         description: Start time for which this metadata item is valid.
       - name: end_time
-        type: datetime64
-        description: End time for which this metadata item is valid.
+        type: datetime64 | None
+        description: End time for which this metadata item is valid; None while ongoing.
       - name: optical_components
         type: tuple[OpticalComponent, ...]
         description: Ordered optical components on this path.
-      - name: geometries
+      - name: geometry
         type: tuple[Geometry, ...]
         description: Ordered geometries on this path.
-      - name: coupling_conditions
+      - name: coupling
         type: tuple[CouplingCondition, ...]
         description: Ordered coupling conditions on this path.
       - name: annotations
@@ -560,24 +590,26 @@ nodes:
     label: Geometry
     display: Geometry
     summary: Geometry for an interval of an optical path, interpreted using the inventory CRS.
+    note: A path's geometries act as piecewise segments placed by their distance arrays; coverage spans first to last distance, half-open. Coordinates interpolate linearly in the inventory CRS, only within a single Geometry object; uncovered optical distance has undefined coordinates, and segments may not overlap. A coil or clump is a segment whose coordinates repeat while distance advances. All distances are optical distances.
     attributes:
-      - name: optical_length
-        type: float
-        description: Optical path interval length in meters.
       - name: name
         type: str
         description: Human-readable geometry name.
       - name: distance
-        type: tuple[float]
-        description: Optical distances paired to coordinates.
+        type: tuple[float, ...]
+        description: Optical distances paired to coordinates; at least two strictly increasing values whose span is the segment's coverage.
       - name: coordinates
         type: tuple[tuple[float, ...], ...]
-        description: Coordinate points describing the geometry.
+        description: Coordinate points describing the geometry; same length as distance.
   Coup:
     label: CouplingCondition
     display: Coupling
     summary: Acoustic coupling condition for an interval of an optical path.
+    note: Coupling conditions are placed by start distance plus optical_length, the same interval idiom annotations use. Coverage may be partial; optical distance not covered by any coupling condition has undefined coupling, and conditions may not overlap one another. All distances are optical distances.
     attributes:
+      - name: distance
+        type: float
+        description: Start optical distance for this coupling condition in meters.
       - name: optical_length
         type: float
         description: Optical path interval length described by this coupling in meters.
@@ -592,7 +624,10 @@ nodes:
         description: Attachment method, such as clamped or bonded.
       - name: depth
         type: float | None
-        description: Depth in meters relative to the local surface or deployment reference, when relevant.
+        description: Depth in meters, positive down, relative to the local surface or deployment reference, when relevant.
+      - name: notes
+        type: str
+        description: Additional notes.
   Ann:
     label: OpticalPathAnnotation
     display: Annotation
@@ -622,6 +657,7 @@ edges:
   - [Net, Station]
   - [FA, Acq]
   - [FA, Path]
+  - [Acq, DistMap]
   - [Station, Channel]
   - [Channel, Response]
   - [Path, Comp]

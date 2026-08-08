@@ -14,16 +14,17 @@ The inventory can be directly attached to a spool, in which case it acts as a me
 ```python
 import dascore as dc
 
-inventory = dc.Inventory.from_yaml("inventory.yaml")
+inventory = dc.inventory("inventory.yaml")
 
-# This automatically filters original contents to include only patches
-# for which there are valid entries in the inventory.
-spool = dc.spool("/data/archive", inventory=inventory)
+# Attaching resolves every indexed patch against the inventory and
+# updates the index to match; unresolvable patches raise by default.
+spool = dc.spool("/data/archive").attach_inventory(inventory)
+
 
 raw = (
     spool
     # Get rid of channels with undefined coupling
-    .unselect(coupling="")
+    .unselect(coupling=None)
     # Coordinate selection from corresponding coordinates
     .select(latitude=(45, 50), elevation=(100, 250))
 )
@@ -31,71 +32,114 @@ raw = (
 patch = raw[0]
 ```
 
+`attach_inventory` applies an `on_missing` policy to patches that resolve to no inventory entry — a `data_source_id` the inventory does not contain, or a time outside every matching epoch. The default is `"raise"`, which fails immediately and names the unmatched IDs; `"warn"` drops them but reports what was dropped; `"drop"` discards them silently, the right choice only when the inventory intentionally covers a subset of a larger archive. Silence is never the default: a typo'd hive directory or a mistyped epoch end time becomes a located error at attach time instead of quietly missing data. This spool-level policy governs whole patches failing to resolve; per-channel gaps such as uncovered geometry remain governed by the partial-coverage semantics — missing values, never errors.
+
+Attaching is also when the index is made truthful. Resolution and epoch boundaries are pure metadata, so the spool's dataframe is filtered and subdivided at attach time — `len(spool)` and `get_contents()` reflect exactly what iteration will yield, and only the data itself materializes lazily on extraction. On large archives this makes `attach_inventory` a potentially costly indexing operation; the price is paid once, and a slow-but-true index beats a fast-but-false one.
+
+In inventory-backed selection, a bare track name with `None` matches channels where that track is undefined (uncovered distance is absence, never an empty-string value); actual field values use qualified names such as `coupling.coupling_type`.
+
+Inventory-backed `select` and `unselect` operate on channels, not whole patches. Contents are trimmed to the matching channels, and when the matching region is disjoint along the fiber — a path that passes in and out of the selected coordinate range, or an undefined-coupling zone in the middle of a path — the patch is subdivided so that each contiguous matching interval becomes its own patch. Selection can therefore change both the shape and the number of patches in the spool. Optical-path validity edges work the same way along time: a fiber can break mid-recording, so a patch straddling a path epoch boundary appears in the index as its pieces, each resolving cleanly to its own window, and the data is split when extracted. `Spool.split_by_labels` (below) applies the same subdivision mechanism to annotation labels.
+
+Acquisition boundaries are different, and stricter: a configuration change requires stopping and restarting the acquisition, so no honestly written file can span one. A file straddling an acquisition epoch boundary is not data to subdivide — it is evidence that the recorded epoch time is wrong, and `attach_inventory` raises, naming the file and the boundary. The usual fix is a correction: set the epoch start time to the actual file boundary, which is the instrument's own record of when it restarted.
+
+Subdivision reflects exactly what the path metadata says: a noisy geometry track can shatter what is conceptually one interval into several patches separated by small gaps. Rather than adding tolerance options to `select`, `Spool.chunk` can be applied after these operations to consolidate nearly-contiguous patches using its existing `tolerance` parameter. `chunk` only merges patches with compatible attrs, so enriched fragments from different epochs — which carry different scalar attrs and coordinates — will not rejoin; merging un-enriched fragments back across a path epoch boundary is legal but merely recreates a patch the next resolution will subdivide again.
+
+`attach_inventory` includes a parameter called `enrich`, which is `True` by default. This means each extracted patch from the spool will automatically include the applicable attrs and coords derived from the inventory. The `attrs`, `coords`, and enrich-level `on_missing` keywords pass through `attach_inventory` to that automatic enrichment, so the lazy path speaks the same vocabulary as the manual `Patch.enrich` shown later.
+
+Another useful function is `Spool.split_by_labels`. It will expand the spool to include all (or just some) of the labels. Note, with an inventory, labels are allowed to overlap. Hence, we might create a case where some of the data are included in multiple patches. It may also greatly expand the number of patches in each spool. It simply raises if no inventory is attached.
+
+```python
+labeled_spool = spool.split_by_labels(include=("hole_1", "trench_?a"), exclude=("along_fence",))
+```
+
+Each output patch carries the label it was split on as the singular `label` patch attr, so overlapping siblings remain distinguishable and later operations can select on `label` directly. The plural `labels` names the per-channel coord `enrich` can copy; the grammar carries the distinction — singular is a fact about the patch, plural is a value per channel.
+
 ### Patch operations
 
 ```python
-# Get optical distance from relevant optical path
-patch = patch.distance_from_inventory(inventory, dim="channel")
+# Enrich with all applicable attrs and coords (the default)
+patch = patch.enrich(inventory)
 
-# Add attributes from relevant acquisition
-patch = patch.add_acquisition_attrs(
+# Or select specific attrs and coords
+patch = patch.enrich(
     inventory,
-    attrs=("tag", "sample_rate", "interrogator.model"),
-)
-
-# Add coords from fiber array
-patch = patch.add_coords(
-    inventory=inventory,
+    attrs=("sample_rate", "gauge_length", "interrogator.model"),
     coords=("x", "y", "z"),
     on_missing="nan",
 )
+
+# Enrich with attrs only
+patch = patch.enrich(inventory, coords=False)
 ```
 
-The patch resolves inventory context from its `data_source_id`, or from an explicit `data_source_id` passed to the inventory methods.
+`Patch.enrich` is the single entry point for copying inventory metadata onto a patch — it resolves the full chain internally (`distance_map` or the affine map to optical distance, then the path tracks), and optical distance itself is requestable like any coord: `enrich(coords=("distance",))`. The `attrs` and `coords` keywords each accept `True` (all applicable), a tuple of names, or `False` to skip. It is the same operation `attach_inventory(enrich=True)` applies automatically to each patch extracted from the spool. The patch never retains a reference to the inventory; any operation that needs inventory context takes it as an explicit argument.
+
+`enrich` overwrites the fields it is asked to copy: calling it is the explicit statement that the inventory wins for those fields, so re-enriching is a refresh, not an error. Its `on_missing` governs only names requested explicitly that the inventory does not define — `"raise"` (the default: you named it, absence is an error), `"nan"` (add it filled with the dtype-appropriate missing marker, NaN for floats and `None` for strings), or `"skip"` (omit it silently). The blanket `attrs=True`/`coords=True` forms copy what is applicable and so never engage the knob. Whole-patch resolution failures belong to the spool-level policy above, and per-channel coverage gaps are always missing values, never errors.
+
+The patch resolves inventory context from its `data_source_id`, or from an explicit `data_source_id` passed to `enrich`. Because acquisition metadata is scalar per patch, `enrich` requires the patch to lie within a single acquisition and optical-path validity window and raises if it straddles a boundary — select or split the patch first.
+
+Patches whose time axis is no longer physical (e.g., lag-time correlations) can still resolve by passing an explicit `time` argument alongside the codes, selecting the acquisition epoch and optical-path context as of that moment. `time` is accepted only when the patch has no physical time coordinate: a patch with a real time axis already states its resolution time, and an explicit `time` would be a second spelling of the same fact, so `enrich` raises — select or split the patch instead of overriding the guard.
+
+```python
+patch = patch.enrich(
+    inventory,
+    data_source_id="DAS.L001.01.RAW",
+    time="2024-05-01T00:00:00",
+    coords=("x", "y", "z"),
+)
+```
 
 ## Working with Archives
 Of course, native interrogators don't support our proposed standard, so written patch files have no way of knowing what network, fiber_array, location, and acquisition code they should be assigned. One very costly and risky approach would be to iterate each file and append the appropriate metadata, if the format supports it. However, this is not ideal for multiple reasons.
 
-A better approach is to update DASCore's file scanning to allow a special file to define some metadata for all files in the same directory. An example of such a file might look like this:
+A better approach is to encode the metadata in the archive layout itself using [hive-style](https://arrow.apache.org/docs/python/dataset.html#partitioned-datasets-multiple-files) directory names. DASCore's file scanning parses any path segment of the form `key=value` as a string patch attribute applied to every file below it. Since paths are already stored in the spool index, this adds no scanning cost, and partition-aware tools such as PyArrow, DuckDB, and polars can query the same layout directly without DASCore in the loop (assuming they know how to read the files in question).
 
-```yaml {filename="line01/.patch_attrs.yml"}
-format: dascore_patch_attr
-version: "0.1.0"
-overwrite: true
-attrs:
-  network: DAS
-  fiber_array: R2D1
-  location: 01
-  acquisition: HHZ
-```
-
-```yaml {filename="line02/.patch_attrs.yml"}
-format: dascore_patch_attr
-version: "0.1.0"
-overwrite: true
-attrs:
-  network: DAS
-  fiber_array: R2D2
-  location: 01
-  acquisition: HHZ
-```
-Then, if the directory structure looks like this:
+An archive laid out this way might look like:
 
 ::: {.adhoc-tree}
 <pre><code><span class="tree-folder tree-root">archive/</span>
 ├── <span class="tree-file tree-file-config">inventory.yaml</span>
-├── <span class="tree-folder tree-data">line_01/</span>
-│   ├── <span class="tree-file tree-file-config">.patch_attrs.yml</span>
-│   ├── <span class="tree-file tree-file-data">2024-05-01_000000.h5</span>
-│   ├── <span class="tree-file tree-file-data">2024-05-01_010000.h5</span>
-│   └── <span class="tree-file tree-file-data">2024-05-01_020000.h5</span>
-├── <span class="tree-folder tree-data">line_02/</span>
-│   ├── <span class="tree-file tree-file-config">.patch_attrs.yml</span>
-│   ├── <span class="tree-file tree-file-data">2024-05-01_000000.h5</span>
-│   ├── <span class="tree-file tree-file-data">2024-05-01_010000.h5</span>
-│   └── <span class="tree-file tree-file-data">2024-05-01_020000.h5</span>
+├── <span class="tree-folder tree-data">network=DAS/</span>
+│   ├── <span class="tree-folder tree-data">fiber_array=R2D1/</span>
+│   │   └── <span class="tree-folder tree-data">location=01/</span>
+│   │       └── <span class="tree-folder tree-data">acquisition=HHZ/</span>
+│   │           ├── <span class="tree-file tree-file-data">2024-05-01_000000.h5</span>
+│   │           ├── <span class="tree-file tree-file-data">2024-05-01_010000.h5</span>
+│   │           └── <span class="tree-file tree-file-data">2024-05-01_020000.h5</span>
+│   └── <span class="tree-folder tree-data">fiber_array=R2D2/</span>
+│       └── <span class="tree-folder tree-data">location=01/</span>
+│           └── <span class="tree-folder tree-data">acquisition=HHZ/</span>
+│               ├── <span class="tree-file tree-file-data">2024-05-01_000000.h5</span>
+│               ├── <span class="tree-file tree-file-data">2024-05-01_010000.h5</span>
+│               └── <span class="tree-file tree-file-data">2024-05-01_020000.h5</span>
 └── <span class="tree-folder tree-notes">field_notes/</span>
     ├── <span class="tree-file tree-file-markdown">deployment_log.md</span>
     └── <span class="tree-file tree-file-table">tap_tests.csv</span></code></pre>
 :::
-DASCore will automatically associate the attributes from the .patch_attrs.yml files with those in the corresponding directories, making it simple to "bolt on" a DASDAE inventory to virtually any DFOS data archive.
+
+Files under `network=DAS/fiber_array=R2D1/location=01/acquisition=HHZ/` resolve to the data source ID `DAS.R2D1.01.HHZ`, making it simple to "bolt on" a DASDAE inventory to virtually any DFOS data archive that can be reorganized (or symlinked) into this layout.
+
+For flatter archives, the four component keys can be collapsed into a single composite segment whose key is exactly the attr name:
+
+::: {.adhoc-tree}
+<pre><code><span class="tree-folder tree-root">archive/</span>
+├── <span class="tree-file tree-file-config">inventory.yaml</span>
+├── <span class="tree-folder tree-data">data_source_id=DAS.R2D1.01.HHZ/</span>
+│   ├── <span class="tree-file tree-file-data">2024-05-01_000000.h5</span>
+│   └── <span class="tree-file tree-file-data">2024-05-01_010000.h5</span>
+└── <span class="tree-folder tree-data">data_source_id=DAS.R2D2.01.HHZ/</span>
+    ├── <span class="tree-file tree-file-data">2024-05-01_000000.h5</span>
+    └── <span class="tree-file tree-file-data">2024-05-01_010000.h5</span></code></pre>
+:::
+
+Because the key matches the attr that resolution reads, this form needs no special machinery — the generic `key=value` parsing sets `data_source_id` directly. It is also branch-agnostic: the second token may name a fiber array or a station, and the resolver distinguishes them through the disjoint code namespaces. DASCore derives the four component attrs from the composite at scan time, so plain selections such as `spool.select(network="DAS")` work on either layout.
+
+A few rules keep the scheme predictable:
+
+- All four `data_source_id` parts must be present for inventory resolution. Partial keys are legal at the scanning layer and remain useful as plain attrs for `spool.select`, but missing parts are never guessed or defaulted; patches without a complete `data_source_id` have no valid inventory entry.
+- Path-derived attributes are always strings. Anything richer belongs in the inventory.
+- Path segments fill attributes the file does not define; they never override. If a file-embedded attribute disagrees with a path segment, scanning raises rather than applying precedence — the same treatment as composite/component disagreement below. The rule is uniform across all attributes; native vendor files embed none of these, so filling covers the normal bolt-on case and the raise fires only when two sources genuinely claim the same fact and clash (e.g., a file moved into the wrong directory).
+- Merged or derived products have no single ancestor, so there is nothing true to assert with provenance keys; store them under plain directories (path segments without `key=value` assert nothing), where their file-embedded attributes — including a cleared `data_source_id` — stand as written.
+- Keys and values should stick to code-safe characters (letters, digits, `-`); `=`, `/`, and `.` are not allowed in values. A blank location code is unrepresentable in a `key=value` segment, so archives either use an explicit code (`location=00`, recommended) or the composite form, which carries blank as an empty token (`data_source_id=DAS.L001..RAW`). The composite `data_source_id` key is the one exception to the dot ban: its value must be exactly four dot-separated code-safe tokens, of which only the location may be empty.
+- Composite and component keys appearing on the same path must agree part-for-part; scanning raises on any disagreement rather than applying precedence.
+- Values should be short, station-like codes. This keeps `data_source_id` readable and total path lengths well clear of the Windows 260-character default limit (deep archives on Windows may still need [long paths enabled](https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation)).

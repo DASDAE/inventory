@@ -7,6 +7,10 @@ sidebar: references
 
 Continuous optical path described by independent component, geometry, coupling, and annotation tracks.
 
+::: {.note}
+No more than one OpticalPath per (FiberArray, location_code) is valid at a given time. Validity intervals are half-open and all times are UTC. Optical components tile [start_distance, start_distance + total component length).
+:::
+
 Aliases: `Path`
 
 ## Attributes
@@ -14,11 +18,13 @@ Aliases: `Path`
 | Name | Type | Description |
 |---|---|---|
 | `name` | str | Human-readable optical path name. |
+| `start_distance` | float | Origin of this path's optical-distance axis in meters; 0 for whole paths. Set by select and split_at so path pieces keep absolute optical distances. |
+| `location_code` | str | FDSN-style location code naming this path lineage within its fiber array; blank by default. Acquisitions sharing this location code interrogate this path. |
 | `start_time` | datetime64 | Start time for which this metadata item is valid. |
-| `end_time` | datetime64 | End time for which this metadata item is valid. |
+| `end_time` | datetime64 \| None | End time for which this metadata item is valid; None while ongoing. |
 | `optical_components` | tuple[[OpticalComponent](OpticalComponent.qmd), ...] | Ordered optical components on this path. |
-| `geometries` | tuple[[Geometry](Geometry.qmd), ...] | Ordered geometries on this path. |
-| `coupling_conditions` | tuple[[CouplingCondition](CouplingCondition.qmd), ...] | Ordered coupling conditions on this path. |
+| `geometry` | tuple[[Geometry](Geometry.qmd), ...] | Ordered geometries on this path. |
+| `coupling` | tuple[[CouplingCondition](CouplingCondition.qmd), ...] | Ordered coupling conditions on this path. |
 | `annotations` | tuple[[OpticalPathAnnotation](OpticalPathAnnotation.qmd), ...] | Ordered optical path annotations. |
 | `otdr_traces` | tuple[[ExternalResource](ExternalResource.qmd), ...] | References to OTDR traces for this optical path. |
 | `optical_length` | float | Computed total optical length from optical_components. |

@@ -100,6 +100,7 @@ docs/index.quarto_ipynb
 .claude
 CLAUDE.md
 .agents/worktrees/
+.scratch/
 
 # profile stuff
 prof/

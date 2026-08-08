@@ -51,42 +51,48 @@ optical_components:
     name: Sensing cable
     optical_length: 720.0
 
-geometries:
+geometry:
   - name: East trench
-    optical_length: 300.0
+    distance: [0.0, 300.0]
+    coordinates:
+      - [2.103905, 48.807461, 115.0]
+      - [2.108000, 48.807461, 115.0]
   - name: North trench
-    optical_length: 120.0
-  - name: Surface run
-    optical_length: 300.0
+    distance: [300.0, 420.0]
+    coordinates:
+      - [2.108000, 48.807461, 115.0]
+      - [2.108000, 48.808500, 116.0]
 
-coupling_conditions:
-  - coupling_type: trench
-    attachment: direct_burial
+coupling:
+  - distance: 0.0
     optical_length: 420.0
-  - coupling_type: surface
-    attachment: loose
+    coupling_type: trench
+    attachment: direct_burial
+  - distance: 420.0
     optical_length: 300.0
+    coupling_type: surface
+    attachment: loose
 ```
 
-The only requirement is that each track is internally ordered and meaningful over the optical path distance axis.
+Each track must be internally ordered, stay within path bounds, and obey its kind's rules: components tile the path exactly, geometry and coupling never overlap (coverage may be partial), and annotations may overlap freely.
 
 :::
 
 ::: {.callout-note collapse="true"}
 ## How should unknown sections be represented?
 
-Use an interval with `optical_length` and leave the unknown descriptive fields unset.
+Geometry and coupling coverage may be partial, so unknown intervals need no placeholder at all: leave them uncovered and they resolve as undefined rather than invalid.
+
+To document that an interval is known-unknown rather than merely unrecorded, use an annotation:
 
 ```yaml
-geometries:
-  - name: Unknown lead-in geometry
+annotations:
+  - distance: 0.0
     optical_length: 50.0
-
-coupling_conditions:
-  - optical_length: 50.0
+    label: unknown lead-in
 ```
 
-This is better than pretending the metadata is known. The unknown interval still preserves the optical-distance budget, so later geometry or coupling updates can replace it without shifting the rest of the path.
+This is better than pretending the metadata is known, and later geometry or coupling updates can fill the interval without touching the rest of the path.
 
 :::
 
@@ -173,9 +179,8 @@ stations:
 Fiber geometry uses the same CRS, but stores coordinate sequences along optical distance:
 
 ```yaml
-geometries:
-  - optical_length: 300.0
-    distance: [50.0, 350.0]
+geometry:
+  - distance: [50.0, 350.0]
     coordinates:
       - [2.103905, 48.807461, 115.0]
       - [2.108000, 48.807461, 115.0]
@@ -216,8 +221,9 @@ optical_components:
 Coupling stays interval-specific:
 
 ```yaml
-coupling_conditions:
-  - optical_length: 1200.0
+coupling:
+  - distance: 0.0
+    optical_length: 1200.0
     coupling_type: conduit
     attachment: loose
     medium: steel
@@ -242,10 +248,9 @@ optical_components:
     container: sensing_cable
     notes: Coiled slack fiber in vault.
 
-geometries:
+geometry:
   - name: Vault 2 coil location
-    optical_length: 100.0
-    distance: [0.0, 100.0]
+    distance: [1200.0, 1300.0]
     coordinates:
       - [500.0, 120.0, 0.0]
       - [500.0, 120.0, 0.0]
@@ -254,8 +259,9 @@ geometries:
 Add coupling or annotation metadata so downstream consumers know this is intentional compact geometry, not missing survey detail:
 
 ```yaml
-coupling_conditions:
-  - optical_length: 100.0
+coupling:
+  - distance: 1200.0
+    optical_length: 100.0
     coupling_type: coiled
     attachment: loose
 

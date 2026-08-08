@@ -90,6 +90,8 @@ website:
           href: References/CoordinateReferenceSystem.qmd
         - text: "CouplingCondition"
           href: References/CouplingCondition.qmd
+        - text: "DistanceMap"
+          href: References/DistanceMap.qmd
         - text: "Enclosure"
           href: References/Enclosure.qmd
         - text: "ExternalResource"
@@ -129,6 +131,8 @@ website:
       contents:
         - text: "Overview"
           href: Examples/index.qmd
+        - text: "Quickstart"
+          href: Examples/quickstart.qmd
         - text: "Simple Inventory"
           href: Examples/simple-inventory.qmd
         - text: "Tunnel Deployment"
@@ -153,6 +157,8 @@ website:
           href: API/spool.qmd
         - text: "Inventory"
           href: API/inventory.qmd
+        - text: "Authoring"
+          href: API/authoring.qmd
         - text: "FiberArray"
           href: API/fiber-array.qmd
         - text: "OpticalPath"

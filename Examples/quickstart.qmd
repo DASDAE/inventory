@@ -1,0 +1,109 @@
+---
+title: "Quickstart: From a Channel Table"
+sidebar: examples
+---
+
+Most deployments begin with exactly two artifacts: the data files and a spreadsheet mapping channels to coordinates. This page walks that spreadsheet into a minimal, valid inventory.
+
+The skeleton below is deliberately small, and none of it is invented: **every required value is an instrument setting the operator already made.** Channel spacing, gauge length, sample rate, and measurement range must be keyed into an interrogator before it will record a single sample — the measurement range even bounds the pulse rate, since each pulse must clear the fiber round trip before the next fires. Vendors write these into the file headers. If you could configure the interrogator, you can fill in the inventory.
+
+## The Starting Point
+
+A GPS walk of the line (or a quick tap-test campaign) produces:
+
+```csv
+channel,latitude,longitude,elevation
+0,40.7440,-108.0313,1712.0
+1,40.7441,-108.0312,1712.2
+2,40.7442,-108.0312,1712.1
+...
+2047,40.7581,-108.0224,1748.9
+```
+
+Plus the settings from the instrument (or the file header): 2048 channels at 1.02 m spacing, 10 m gauge length, 500 Hz sample rate.
+
+## Build The Inventory
+
+```python
+import pandas as pd
+
+import dascore.core.inventory as inv
+
+table = pd.read_csv("channel_locations.csv")
+SPATIAL_INTERVAL = 1.02  # m, from the instrument settings
+
+acquisition = inv.Acquisition(
+    code="RAW",
+    location_code="00",
+    start_time="2026-06-01",
+    data_category="DAS",
+    data_type="strain_rate",
+    data_units="1/s",
+    gauge_length=10.0,
+    sample_rate=500.0,
+    spatial_interval=SPATIAL_INTERVAL,
+    start_distance=0.0,
+)
+
+# The recorded range: 2048 channels x 1.02 m. One segment states it honestly.
+sensing_fiber = inv.FiberSegment(
+    name="sensing fiber",
+    optical_length=len(table) * SPATIAL_INTERVAL,
+)
+
+# Geometry control points at each surveyed channel's optical distance.
+geometry = inv.Geometry(
+    name="GPS walk 2026-06-01",
+    distance=tuple(table["channel"] * SPATIAL_INTERVAL),
+    coordinates=tuple(zip(table["latitude"], table["longitude"], table["elevation"])),
+)
+
+path = inv.OpticalPath(
+    name="Main line",
+    location_code="00",
+    start_time="2026-06-01",
+    optical_components=(sensing_fiber,),
+    geometry=(geometry,),
+).validate()
+
+inventory = inv.Inventory(
+    networks=(
+        inv.Network(
+            code="DAS",
+            fiber_arrays=(
+                inv.FiberArray(
+                    code="L001",
+                    name="Quickstart line",
+                    start_time="2026-06-01",
+                    acquisitions=(acquisition,),
+                    optical_paths=(path,),
+                ),
+            ),
+        ),
+    ),
+)
+```
+
+That is the whole skeleton: one acquisition restating the instrument configuration, one fiber segment stating the recorded range, one geometry segment carrying the survey, and the three containers that give the data its address, `DAS.L001.00.RAW`.
+
+## Use It
+
+```python
+import dascore as dc
+
+patch = dc.spool("das_data/")[0]
+patch = patch.enrich(
+    inventory,
+    data_source_id="DAS.L001.00.RAW",
+    coords=("latitude", "longitude", "elevation"),
+)
+```
+
+Two behaviors worth knowing about, both free:
+
+- Operators routinely set the measurement range past the physical fiber end. Channels recorded beyond geometry coverage enrich as NaN and cannot match coordinate selections — partial coverage is undefined, not invalid, so the over-set-range habit needs no special handling.
+- The affine channel map above (`start_distance` + `spatial_interval`) trusts the instrument's nominal numbers. When a tap test later shows the wellhead responding twelve channels late, replace `start_distance` with a measured [DistanceMap](../References/DistanceMap.qmd) — a correction, applied in place, retroactive to all the epoch's data.
+
+## What To Add When You Know More
+
+Everything else in the model is refinement of this skeleton, added without restructuring it: coupling intervals when burial conditions matter, annotations for named zones, cable and interrogator resources for hardware provenance, a new `path@` epoch when the fiber breaks, and new acquisition epochs when the configuration changes. The [Simple Inventory](simple-inventory.qmd) example shows the next tier of detail; the [authoring format](../API/authoring.qmd) lets field crews maintain all of it as a directory of YAML and CSV files.

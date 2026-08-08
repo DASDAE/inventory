@@ -19,8 +19,6 @@ Aliases: `Int`
 | `model` | str | Model number of the interrogator. |
 | `serial_number` | str | Serial number of the interrogator. |
 | `instrument_type` | str | General instrument category. |
-| `lead_cable_length` | float | Lead cable length for the interrogator. |
-| `take_in_cable_length` | float | Take-in cable length for closed-loop systems. |
 
 ## Contains
 

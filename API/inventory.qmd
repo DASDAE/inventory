@@ -27,7 +27,6 @@ cable = inv.Cable(
 )
 
 geometry = inv.Geometry(
-    optical_length=1000.0,
     name="survey line",
     distance=(0.0, 1000.0),
     coordinates=((45.0, -112.0, 1200.0), (45.01, -112.02, 1180.0)),
@@ -43,13 +42,16 @@ fiber = inv.FiberSegment(
 
 path = inv.OpticalPath(
     name="l001_path",
+    location_code="01",
+    start_time="2024-05-01",
     optical_components=(fiber,),
-    geometries=(geometry,),
+    geometry=(geometry,),
 )
 
 acquisition = inv.Acquisition(
     code="RAW",
     location_code="01",
+    start_time="2024-05-01",
     data_category="DAS",
     data_type="strain_rate",
     data_units="1/s",
@@ -63,6 +65,7 @@ acquisition = inv.Acquisition(
 fiber_array = inv.FiberArray(
     code="L001",
     name="L001",
+    start_time="2024-05-01",
     acquisitions=(acquisition,),
     optical_paths=(path,),
 )
@@ -118,18 +121,15 @@ break_time = "2024-05-12T10:30:00.12"
 break_distance = 600.0
 
 closed_opath = opath.new(end_time=break_time)
-new_opath = (
-    opath.split(break_distance)[0]
-    .new(start_time=break_time)
+kept, _ = opath.split_at(break_distance)
+new_opath = kept.new(
+    start_time=break_time,
+    end_time=None,
+    notes="Fiber break at 600 m; sensing continues on the near side.",
 )
 
-left, right = path.split_at(650.0)
-shortened_path = left.new(
-    end_time="2024-05-12T10:30:00",
-    notes="Fiber break after 650 m.",
-)
 new_fiber_array = fiber_array.new(
-    optical_paths = (
+    optical_paths=(
         fiber_array.optical_paths[:-1] + (closed_opath, new_opath)
     )
 )
@@ -137,11 +137,13 @@ new_fiber_array = fiber_array.new(
 inventory_v2 = inventory.replace(fiber_array, new_fiber_array)
 ```
 
-Or through a convenience function:
+The old epoch ends and the new one begins at the same instant — legal because validity intervals are half-open, so `break_time` itself belongs to the new epoch.
+
+Or through a convenience function that addresses the fiber array directly:
 
 ```python
 inventory_v2 = inventory.register_fiber_break(
-    source_id="AA.F023.01.HRS", time=break_time, distance=break_distance
+    fiber_array="AA.F023", time=break_time, distance=break_distance
 )
 ```
 
@@ -154,14 +156,10 @@ Patch enrichment starts from `data_source_id`. The identifier selects a network,
 ```python
 patch = patch.update_attrs(data_source_id="DAS.L001.01.RAW")
 
-patch = patch.distance_from_inventory(inventory, dim="channel")
-patch = patch.add_inventory_attrs(
+patch = patch.enrich(
     inventory,
     attrs=("sample_rate", "gauge_length", "interrogator.model"),
-)
-patch = patch.add_inventory_coords(
-    inventory,
-    coords=("label", "latitude", "longitude", "elevation"),
+    coords=("distance", "labels", "latitude", "longitude", "elevation"),
     on_missing="nan",
 )
 ```
@@ -169,3 +167,5 @@ patch = patch.add_inventory_coords(
 The patch remains lightweight until these methods are called. The inventory stays external, versionable, and reusable across many files.
 
 ## Design Rule
+
+The inventory is corrected in place and epoch-ed additively. Corrections replace objects (`replace`, retroactive — our knowledge changed); epochs append them (a closed path plus its successor — the world changed). Nothing mutates: every update builds a new inventory value, so old references stay valid and updates are explicit in the code that makes them.

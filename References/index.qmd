@@ -15,6 +15,7 @@ These pages are generated from `specs/dasdae-inventory.yml`.
 | [Connector](Connector.qmd) | Joined optical interface between components. |
 | [CoordinateReferenceSystem](CoordinateReferenceSystem.qmd) | Inventory-wide coordinate reference system used by all coordinate-bearing metadata. |
 | [CouplingCondition](CouplingCondition.qmd) | Acoustic coupling condition for an interval of an optical path. |
+| [DistanceMap](DistanceMap.qmd) | Measured control-point map from an acquisition's channel-like coordinate onto optical path distance. |
 | [Enclosure](Enclosure.qmd) | Physical housing, assembly, pipe, duct, conduit, or carrier resource for optical components or cables. |
 | [ExternalResource](ExternalResource.qmd) | External resource identified by DASCore but not otherwise modeled. |
 | [FiberArray](FiberArray.qmd) | Durable fiber-optic observing identity anchored by one or more optical paths. |
@@ -29,5 +30,5 @@ These pages are generated from `specs/dasdae-inventory.yml`.
 | [References](References.qmd) | Shareable inventory resources keyed by stable resource_id values. |
 | [Response](Response.qmd) | Station-specific response model associated with a channel. |
 | [Splice](Splice.qmd) | Fused or mechanical splice between optical fiber segments. |
-| [Station](Station.qmd) | Station-level observing identity used to group one or more fiber arrays under a network. |
+| [Station](Station.qmd) | Point-like observing identity under a network, hosting channels for non-fiber or colocated observations. |
 | [Terminator](Terminator.qmd) | End condition of an optical path. |

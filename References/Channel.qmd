@@ -18,7 +18,7 @@ Channel coordinates are interpreted using Inventory.coordinate_reference_system.
 | `code` | str | Channel code used in FDSN-like data source identifiers. |
 | `location_code` | str | FDSN-style location code used to group or disambiguate channels. |
 | `start_time` | datetime64 | Start time for which this channel metadata is valid. |
-| `end_time` | datetime64 | End time for which this channel metadata is valid. |
+| `end_time` | datetime64 \| None | End time for which this channel metadata is valid; None while ongoing. |
 | `coordinates` | tuple[float, ...] \| None | Channel coordinates ordered according to Inventory.coordinate_reference_system.coordinate_labels. |
 | `<coordinate_label>` | float | Dynamic coordinate field named by CoordinateReferenceSystem.coordinate_labels, such as latitude, longitude, elevation, x, y, or z. |
 | `data_type` | Literal[VALID_DATA_TYPES] | Quantity measured or produced by this channel. |

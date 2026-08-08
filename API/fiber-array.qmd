@@ -10,25 +10,28 @@ sidebar: api
 - Provide the fiber-array code used in data source identifiers.
 - Group time-aware `Acquisition` records for DAS data produced on the array.
 - Link to the valid `OpticalPath` context for the requested time range.
-- Provide fiber-array-level attrs that can be copied onto patches with `add_inventory_attrs()`.
+- Provide fiber-array-level attrs that can be copied onto patches with `Patch.enrich()`.
 
 ## Example
 
 ```python
 patch = spool.select(network="XX", tag="raw*")[0]
 
-patch = patch.distance_from_inventory(inventory, dim="channel")
-patch = patch.add_inventory_attrs(inventory, attrs=("tag",))
-patch = patch.add_inventory_coords(inventory, coords=("label", "x", "y", "z"))
+patch = patch.enrich(
+    inventory,
+    attrs=("data_type",),
+    coords=("distance", "labels", "x", "y", "z"),
+)
 ```
 
 The `data_source_id` on the patch can also be supplied explicitly:
 
 ```python
-patch = patch.add_inventory_coords(
+patch = patch.enrich(
     inventory,
     data_source_id="XX.GARDEN.00.RAW",
-    coords=("label", "x"),
+    attrs=False,
+    coords=("labels", "x"),
 )
 ```
 

@@ -10,7 +10,7 @@ sidebar: api
 - Store ordered optical components such as fiber segments, connectors, splices, and terminators.
 - Store geometry, coupling, and annotation tracks along optical distance.
 - Resolve coordinates using the path CRS and geometry track.
-- Validate that populated interval tracks match the optical component length.
+- Validate that optical components tile the path length and that populated tracks stay within path bounds; geometry and coupling coverage may be partial.
 - Support path editing operations such as distance selection, splitting, reversing, concatenation, and revision.
 
 ## Path Operations
@@ -28,33 +28,30 @@ joined_path = left + right
 path.validate()
 ```
 
-`select(distance=(start, stop))` clips optical components, geometries, coupling conditions, and annotations to the requested optical-distance interval. Open bounds can use `None`.
+`select(distance=(start, stop))` clips optical components, geometries, coupling conditions, and annotations to the requested optical-distance interval. Open bounds can use `None`. Selections and splits preserve absolute optical distances — pieces are never rebased to zero.
 
 `split_at(distance)` returns the two selected path pieces on either side of the split distance.
 
-`reverse()` reverses ordered tracks and rewrites annotation distances against the reversed path.
+`reverse()` reverses ordered tracks and rewrites every distance-bearing track — geometry arrays, coupling intervals, and annotations — against the reversed path.
 
-`path_a + path_b` concatenates two paths when their CRS definitions match.
+`path_a + path_b` concatenates two paths when their CRS definitions match, rewriting the second path's tracks onto the combined axis.
 
-`validate()` checks that geometry and coupling track lengths agree with the optical component length and that annotations stay within path bounds.
+`validate()` checks that the optical components tile the path's span — `[start_distance, start_distance + total component length)`, with `start_distance` 0 for whole paths and set by `select`/`split_at` on pieces — and that geometry, coupling, and annotation tracks stay within path bounds. Geometry and coupling coverage may be partial; uncovered intervals are undefined rather than invalid. Overlapping geometry segments or coupling conditions raise — they are function tracks, one value per distance — while annotations may overlap freely.
 
 ## Patch Projection
 
-Patch-level inventory methods resolve the valid optical path from the patch `data_source_id` and patch time:
+`Patch.enrich` resolves the valid optical path from the patch `data_source_id` and patch time, mapping channels to optical distance internally (via the acquisition's `distance_map` or affine form) before projecting the path tracks:
 
 ```python
-patch = patch.distance_from_inventory(inventory, dim="channel")
-
-patch = patch.add_inventory_coords(
+patch = patch.enrich(
     inventory,
-    coords=("label", "x", "y", "z", "optical_component.name"),
-    on_boundary="warn",
+    coords=("distance", "labels", "x", "y", "z", "optical_components.name"),
     on_missing="nan",
 )
 ```
 
-Coordinate requests can include geometry axes such as `x`, `y`, `z`, `latitude`, `longitude`, and `elevation`; annotation labels via `label`; and interval metadata from qualified tracks such as `optical_component.name`, `geometry.name`, `coupling_condition.coupling_type`, or `annotation.label`.
+Coordinate requests can include optical `distance` itself; geometry axes such as `x`, `y`, `z`, `latitude`, `longitude`, and `elevation`; annotation labels via the per-channel `labels` coord; and interval metadata from qualified tracks such as `optical_components.name`, `geometry.name`, `coupling.coupling_type`, or `annotations.label` (`labels` is the shorthand for the last). Qualified names match the model attributes (and the authoring CSV stems) exactly — one name per track everywhere. Because annotations are the set track, explicitly requesting `labels` raises where annotations overlap the requested channels; the general overlapping case belongs to `Spool.split_by_labels`. The blanket `coords=True` form includes `labels` only when the patch's channels are overlap-free and silently omits it otherwise — only an explicit request raises.
 
 ## Design Rule
 
-`OpticalPath` is not the raw channel table. Acquisition metadata maps channel or index coordinates into optical distance; the path then maps optical distance into geometry, annotations, coupling, and optical-component context.
+`OpticalPath` is not the raw channel table. Acquisition metadata maps channel or index coordinates into optical distance — through the measured `distance_map` when one exists, else the affine `start_distance`/`spatial_interval` form; the path then maps optical distance into geometry, annotations, coupling, and optical-component context.

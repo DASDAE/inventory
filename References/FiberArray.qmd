@@ -16,7 +16,7 @@ Aliases: `FA`
 | `code` | str | Station-like fiber array code used in data_source_id. |
 | `name` | str | Human-readable fiber array name. |
 | `start_time` | datetime64 | Start time for which this metadata item is valid. |
-| `end_time` | datetime64 | End time for which this metadata item is valid. |
+| `end_time` | datetime64 \| None | End time for which this metadata item is valid; None while ongoing. |
 | `acquisitions` | tuple[[Acquisition](Acquisition.qmd), ...] | Acquisitions associated with this fiber array. |
 | `optical_paths` | tuple[[OpticalPath](OpticalPath.qmd), ...] | Optical paths associated with this fiber array. |
 | `notes` | str | Additional notes. |

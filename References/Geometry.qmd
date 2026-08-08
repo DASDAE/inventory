@@ -7,16 +7,19 @@ sidebar: references
 
 Geometry for an interval of an optical path, interpreted using the inventory CRS.
 
+::: {.note}
+A path's geometries act as piecewise segments placed by their distance arrays; coverage spans first to last distance, half-open. Coordinates interpolate linearly in the inventory CRS, only within a single Geometry object; uncovered optical distance has undefined coordinates, and segments may not overlap. A coil or clump is a segment whose coordinates repeat while distance advances. All distances are optical distances.
+:::
+
 Aliases: `Geo`
 
 ## Attributes
 
 | Name | Type | Description |
 |---|---|---|
-| `optical_length` | float | Optical path interval length in meters. |
 | `name` | str | Human-readable geometry name. |
-| `distance` | tuple[float] | Optical distances paired to coordinates. |
-| `coordinates` | tuple[tuple[float, ...], ...] | Coordinate points describing the geometry. |
+| `distance` | tuple[float, ...] | Optical distances paired to coordinates; at least two strictly increasing values whose span is the segment's coverage. |
+| `coordinates` | tuple[tuple[float, ...], ...] | Coordinate points describing the geometry; same length as distance. |
 
 ## Contains
 

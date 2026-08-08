@@ -28,6 +28,7 @@ Cable containers are intentionally limited. A cable can be inside an enclosure o
 | `specification` | [ExternalResource](ExternalResource.qmd) \| None | External cable specification, datasheet, or product page. |
 | `container` | [Enclosure](Enclosure.qmd) \| [Cable](Cable.qmd) \| None | Optional containing physical asset, such as an enclosure, pipe, duct, or larger cable assembly. |
 | `fiber_count` | int \| None | Number of fibers contained in the cable. |
+| `notes` | str | Additional notes. |
 
 ## Contains
 

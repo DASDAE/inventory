@@ -1,0 +1,149 @@
+---
+title: "Authoring Inventories"
+sidebar: api
+---
+
+Hand-writing a deeply nested manifest is the part of metadata standards users abandon first. The authoring format splits the inventory along its natural grain: long, row-shaped track data (optical components, geometry, coupling, annotations) live in CSV files that field crews can maintain as spreadsheets, while small heterogeneous objects (acquisitions, interrogators, cables) live in YAML or JSON files matching the pydantic models. A directory of these files is itself a loadable inventory — `dc.inventory("my_inventory/")` assembles and validates it directly, and `inventory.to_yaml()` exports the single-file interchange artifact for shipping next to a data archive.
+
+## Directory Layout
+
+::: {.adhoc-tree}
+<pre><code><span class="tree-folder tree-root">my_inventory/</span>
+├── <span class="tree-file tree-file-config">inventory.yaml</span>
+├── <span class="tree-folder tree-data">resources/</span>
+│   ├── <span class="tree-file tree-file-config">int_01.yaml</span>
+│   └── <span class="tree-file tree-file-config">cable_01.yaml</span>
+├── <span class="tree-folder tree-data">networks/</span>
+│   └── <span class="tree-file tree-file-config">DAS.yaml</span>
+├── <span class="tree-folder tree-data">fiber_arrays/</span>
+│   └── <span class="tree-folder tree-data">DAS.L001/</span>
+│       ├── <span class="tree-file tree-file-config">attrs.yaml</span>
+│       ├── <span class="tree-folder tree-data">path/</span>
+│       │   ├── <span class="tree-file tree-file-config">attrs.yaml</span>
+│       │   ├── <span class="tree-file tree-file-table">optical_components.csv</span>
+│       │   ├── <span class="tree-file tree-file-table">geometry.csv</span>
+│       │   ├── <span class="tree-file tree-file-table">coupling.csv</span>
+│       │   └── <span class="tree-file tree-file-table">annotations.csv</span>
+│       └── <span class="tree-folder tree-data">path@2024-05-12T103000/</span>
+│           └── <span class="tree-file tree-file-table">...</span>
+├── <span class="tree-folder tree-data">acquisitions/</span>
+│   ├── <span class="tree-file tree-file-config">DAS.L001.01.RAW.yaml</span>
+│   ├── <span class="tree-file tree-file-config">DAS.L001.01.RAW@2024-06-01.yaml</span>
+│   └── <span class="tree-folder tree-data">DAS.L001.02.DEC/</span>
+│       ├── <span class="tree-file tree-file-config">attrs.yaml</span>
+│       └── <span class="tree-file tree-file-table">distance_map.csv</span>
+└── <span class="tree-folder tree-notes">photos/</span>
+    └── <span class="tree-file tree-file-markdown">wellhead.jpg</span></code></pre>
+:::
+
+## Names Are Addresses
+
+The hierarchy is never built by nesting; it materializes from names, following the same convention as [hive-style archives](spool.qmd#working-with-archives):
+
+- A fiber array's name is its address: `DAS.L001/` (or `DAS.L001.yaml`, for an array with no row-shaped tracks yet) places array `L001` in network `DAS`. When the code is reused across epochs, the same `@` convention as everywhere else applies: `DAS.L001@2024-03-01/`.
+- An acquisition filename is its dotted `data_source_id`: `DAS.L001.01.RAW.yaml`. When two epochs of the same acquisition would collide, the later file appends `@` and its start time: `DAS.L001.01.RAW@2024-06-01.yaml`. The suffix is a restated address: it must agree exactly with the in-file `start_time` (a date-only suffix means midnight UTC) or loading raises.
+- A resource filename is its `resource_id`: `cable_01.yaml`.
+- `networks/` is optional — only needed when the network itself has metadata worth recording. Networks mentioned by other addresses exist regardless.
+
+The full contract: **file declares type, container agrees, name ⇒ identity, envelope ⇒ version.** Every object file states what it is, its container must agree with that statement, its name determines which entity it is, and the top-level `inventory.yaml` versions the whole document.
+
+Addresses may be restated inside files (e.g., codes in `attrs.yaml`), but a restated address must agree with the name or loading raises. There is never a precedence rule between two spellings of the same fact.
+
+## Objects: YAML or JSON
+
+Object files follow the pydantic models. YAML and JSON are interchangeable — they share one data model, so `.yaml`, `.yml`, and `.json` are accepted identically.
+
+Every object file carries a `type` field naming its model — `type: Acquisition`, `type: Cable`, `type: FiberArray` in an `attrs.yaml`. The container is never the source of the type; it is a check on it. A `type: Acquisition` file inside `fiber_arrays/` fails with "wrong container" rather than a confusing field-validation error, and a model-declaring file inside an unrecognized directory is a near-miss, not field notes (see [Loading Rules](#loading-rules)). The envelope declares `type: Inventory` under the same rule — one rule, zero exceptions.
+
+**An entity is a file until it needs row-shaped tracks, then it is a directory.** A pathless fiber array can be `fiber_arrays/DAS.L001.yaml`; once it grows an optical path it becomes the directory form — `attrs.yaml` plus track files. An acquisition with a large channel map graduates the same way: `acquisitions/DAS.L001.02.DEC/` holding `attrs.yaml` and `distance_map.csv`. The two forms are spellings of the same identity, so both present at once raises, and an attribute stated inline in `attrs.yaml` *and* as a CSV in the same directory raises.
+
+Individual files never carry `schema_version`; the envelope versions the document exactly once.
+
+## Tracks: CSV
+
+Inside an entity directory, a CSV is matched to the model purely by name: **`<name>.csv` populates the attribute `<name>` of the type declared in `attrs.yaml`.** `geometry.csv` fills `OpticalPath.geometry`, `coupling.csv` fills `OpticalPath.coupling`, `distance_map.csv` fills `Acquisition.distance_map`. There is no lookup table in the loader, and a CSV whose stem matches no attribute of the declared type raises — a typo like `geometrys.csv` fails loudly instead of loading as field notes.
+
+How rows map onto objects is a property of the attribute's type, and there are exactly two shapes:
+
+- **Object-per-row** — the element type's fields are scalars or `resource_id` references (nested objects never appear inline; they are referenced by ID and defined in `resources/`). Each row is one object. The path's component, coupling, and annotation tracks work this way.
+- **Point-per-row** — the type holds paired parallel arrays. Each row is one control point. When the attribute is a *collection* of such objects (`geometry`), a grouping column assigns points to objects; when it is a single object (`distance_map`), there is no grouping column.
+
+Homogeneous tables need no discriminator:
+
+```csv
+distance,optical_length,coupling_type,notes
+0,340,conduit,
+340,15,trench,backfilled
+```
+
+`optical_components.csv` holds a union of component types, so like any union container it carries a `type` column. It also carries a required `sequence` column, because components are the one track placed by order rather than by explicit distances: each component starts where the previous one ends, which is what makes total optical length canonical. The loader orders rows by `sequence`, never by row position — so sorting the sheet in a spreadsheet is harmless, since the numbers travel with their rows and the loader restores the true order. Duplicate or non-increasing values raise. A filled cell in a column that does not pertain to the row's type is a row-level error:
+
+```csv
+sequence,type,optical_length,name,container,fiber_index,color
+1,fiber_segment,1000.0,fiber 1,cable_01,1,blue
+2,splice,0.1,splice 1,,,
+```
+
+`geometry.csv` columns are named by the CRS `coordinate_labels` — `latitude,longitude,elevation` under the default CRS, or whatever the envelope declares for a local grid (this example's envelope declares `coordinate_labels: [x, y, elevation]`) — so the loader validates geometry against the declared frame. Its `segment` column groups rows into `Geometry` objects, the way the `type` column groups columns into a union:
+
+```csv
+segment,distance,x,y,elevation
+S100,1100.0,2562048.25,1137365.53,687.0
+S100,1102.0,2562048.17,1137365.63,685.0
+S120,1202.0,2562051.10,1137380.20,687.1
+S120,1204.0,2562051.02,1137380.31,685.1
+```
+
+Segments are piecewise: coordinates interpolate within a segment, never across, and optical distance covered by no segment (lead cable between boreholes, in this example) has undefined coordinates — enrichment yields NaN there and coordinate selection cannot match it. The loader builds one `Geometry` per unique `segment` value, ordering its rows by `distance`; interpolation spans the object's whole range, so physically distinct features need distinct segment names, and overlapping segments raise. A coil is authored as repeated coordinates while `distance` advances. As everywhere in DASCore, `distance` is optical distance; converting borehole-depth surveys to optical distance is an authoring-time step. Segment names may coincide with annotation labels (a borehole is naturally both), but the tracks stay independent.
+
+`distance_map.csv` is the other point-per-row table: measured control points mapping an acquisition's channel-like coordinate onto path distance. Its input column declares the axis — `channel` when the interrogator reports channel numbers, `instrument_distance` when it reports its own nominal meters — and the output column is always `distance`, the path axis. Exactly one input column may be present:
+
+```csv
+channel,distance
+512,500.0
+1710,1698.0
+```
+
+The map is a function, not a roster: it answers where a channel would fall, without listing which channels exist, so control points are only needed where the slope changes. Straight runs cost two points regardless of length, and a zone-selected acquisition (record two boreholes, skip the lead cable between) is two points per zone with the slope break falling out of piecewise-linear interpolation. Small maps can stay inline in the acquisition YAML under the same key names; the CSV form is for when a spreadsheet is the better editor.
+
+An empty cell means unset, never an empty string. The one blank-meaningful code, `location_code`, therefore never rides in a cell: it appears as an empty token in dotted names (`DAS.L001..RAW`) or as the bare `path` stem.
+
+## Optical Path Epochs
+
+Each `path*/` directory under a fiber array is one `OpticalPath` epoch — an entity directory like any other: an `attrs.yaml` declaring `type: OpticalPath` (with `name`, OTDR references, and notes), plus its four track CSVs.
+
+- The bare `path/` directory is the first epoch, starting when the fiber array starts.
+- Each later epoch is a sibling directory named `path@` plus its start time: `path@2024-05-12T103000/`.
+- A non-blank location code joins the stem with a dot: `path.00/`, `path.00@2024-05-12T103000/`. The bare stem is the blank location, and each location code is its own epoch lineage.
+
+`path` is the one reserved container stem: unlike attribute CSVs, these directories are not serializing an attribute — they address a child entity whose name carries its epoch. The declared type must still agree with the container: `type: Acquisition` inside a `path*/` directory raises.
+
+Within one location's lineage, epochs are non-overlapping by construction: sorted by start time, each epoch implicitly ends where the next begins, and the last is ongoing. There is no required end time to get wrong, so the forbidden state — overlapping optical paths — stays unrepresentable by default, and recording a fiber break is purely additive: create the new epoch directory and leave the old one untouched. An epoch's `attrs.yaml` may state an explicit earlier `end_time` — recording a dark interval or a retired lineage — which must not exceed the next epoch's start (overlap raises); the implicit end is simply the default.
+
+There is no carry-forward between epochs; each states its tracks completely. Copying a CSV forward and editing it is the intended workflow.
+
+Acquisitions and fiber arrays epoch differently from paths: their in-file times are authoritative, because unlike paths they may leave gaps — an instrument off for six weeks is an epoch that set its `end_time` followed by an epoch whose `@` start is later, and patches inside the gap resolve to nothing (reported by the attach policy). Adjacent epochs may abut exactly; half-open intervals hand the boundary instant to the newer epoch. Overlapping same-code epochs raise at load. The `@` suffix never carries semantics of its own — it exists for filename uniqueness and restates the start time, agree-or-raise.
+
+Timestamps in names use ISO 8601 basic format for the time portion (`2024-05-12T103000`, fractional seconds as `T103000.12`) because `:` is not a legal filename character on Windows. Date-only forms (`@2024-06-01`) are valid when that precision suffices. All timestamps are UTC, and timezone designators are not allowed — no `Z`, no offsets; a naive timestamp means UTC, so an instant never has two spellings by offset. Epoch-name uniqueness is temporal, not textual: two names resolving to the same instant (`path@2024-06-01/` and `path@2024-06-01T000000/`) raise as duplicate epochs, as does a zero-length epoch such as a `path@` time equal to the fiber array's start.
+
+## The Envelope
+
+`inventory.yaml` declares `type: Inventory` and holds only the document-level singleton fields — `schema_version`, `resource_id`, `creation_info`, and `coordinate_reference_system` — never the collections, which live in the directory structure. The CRS is implicit by default (the standard geographic CRS, per the model); declare it in the envelope only to override it for exceptional frames such as mines or laboratories. It never gets its own file: singletons have no identity to put in a filename.
+
+The envelope itself is optional while authoring — a bare directory of fiber arrays and acquisitions loads with defaults — but `to_yaml()` always writes a fully explicit envelope, so the interchange artifact is pinned even when the workbench is loose.
+
+## Loading Rules
+
+Loading is strict about near-misses and indifferent to clean misses — and because every object file declares its type, participation is decided by content, not by directory-name spelling:
+
+- Anything that claims to participate in a convention but gets it wrong raises: a `path@` directory with a malformed timestamp, a `type` field disagreeing with its container, a restated address disagreeing with a name, a geometry header disagreeing with the CRS labels, a CSV stem matching no attribute of the declared type, the same identity spelled as both a file and a directory, or an attribute stated both inline and as a CSV.
+- Identity is unique per container regardless of spelling: two names differing only by case raise (case-insensitive filesystems cannot hold both), and the same name with two extensions (`cable_01.yaml` and `cable_01.json`) raises as two spellings of one identity.
+- Structural column names — `type`, `sequence`, `segment`, `distance` — are reserved: a CRS whose `coordinate_labels` collide with them raises.
+- A YAML/JSON file that declares a model type inside an unrecognized container is a near-miss, not field notes: a typo like `aquisitions/` raises instead of silently loading an inventory with no acquisitions.
+- Anything that does not participate is ignored: `photos/`, `notes/`, deployment logs. Field material lives happily inside the inventory directory.
+
+Validation errors reference their source — file, and row for CSVs (e.g., `coupling.csv, row 3: interval 900.0–960.0 extends past path length 940.0`). Gaps in geometry or coupling coverage are not errors: partial coverage is undefined, not invalid.
+
+## StationXML
+
+The station branch of the model deliberately mirrors StationXML, so a future loader extension will accept a traditional StationXML file at the top level of the directory, populating stations, channels, and responses while the directory populates the fiber branch — one inventory describing a hybrid deployment with each community's native tooling. Two rules are reserved for it now: overlapping declarations (e.g., a network defined in both places) must agree on the fields both models represent or loading raises — fields only one side holds are imported or kept without constituting disagreement — and import requires the inventory CRS to be the geographic default, since StationXML coordinates are implicitly geographic. Until then, stations can be authored directly as YAML files under `stations/`, following the same name-as-address convention.
