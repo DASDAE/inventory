@@ -35,7 +35,7 @@ The deployment uses a telemetry (lead-in) cable to connect to a separate sensing
 
 ## Build The Inventory
 
-Start by transcribing the field notes into a table. This gives the inventory a single source for geometry and distance intervals. Normally one would probably just read this from a CSV.
+Start by transcribing the field notes into a table. This gives the inventory a single source for geometry and distance intervals. In practice this would be read from a CSV.
 
 ```python
 import pandas as pd
@@ -175,10 +175,7 @@ surface_run = inv.Geometry(
 )
 ```
 
-The 50 m telemetry lead-in has no survey, so it simply stays uncovered — undefined rather than invalid.
-
-```python
-```
+The 50 m telemetry lead-in has no survey, so it stays uncovered.
 
 #### Coupling Conditions
 

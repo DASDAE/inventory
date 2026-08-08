@@ -3,7 +3,7 @@ title: "Authoring Inventories"
 sidebar: api
 ---
 
-Hand-writing a deeply nested manifest is the part of metadata standards users abandon first. The authoring format splits the inventory along its natural grain: long, row-shaped track data (optical components, geometry, coupling, annotations) live in CSV files that field crews can maintain as spreadsheets, while small heterogeneous objects (acquisitions, interrogators, cables) live in YAML or JSON files matching the pydantic models. A directory of these files is itself a loadable inventory — `dc.inventory("my_inventory/")` assembles and validates it directly, and `inventory.to_yaml()` exports the single-file interchange artifact for shipping next to a data archive.
+The authoring format splits the inventory along its natural grain: long, row-shaped track data (optical components, geometry, coupling, annotations) live in CSV files that field crews can maintain as spreadsheets, while small heterogeneous objects (acquisitions, interrogators, cables) live in YAML or JSON files matching the pydantic models. A directory of these files is itself a loadable inventory — `dc.inventory("my_inventory/")` assembles and validates it directly, and `inventory.to_yaml()` exports the single-file interchange artifact for shipping next to a data archive.
 
 ## Directory Layout
 
@@ -53,7 +53,7 @@ Addresses may be restated inside files (e.g., codes in `attrs.yaml`), but a rest
 
 Object files follow the pydantic models. YAML and JSON are interchangeable — they share one data model, so `.yaml`, `.yml`, and `.json` are accepted identically.
 
-Every object file carries a `type` field naming its model — `type: Acquisition`, `type: Cable`, `type: FiberArray` in an `attrs.yaml`. The container is never the source of the type; it is a check on it. A `type: Acquisition` file inside `fiber_arrays/` fails with "wrong container" rather than a confusing field-validation error, and a model-declaring file inside an unrecognized directory is a near-miss, not field notes (see [Loading Rules](#loading-rules)). The envelope declares `type: Inventory` under the same rule — one rule, zero exceptions.
+Every object file carries a `type` field naming its model — `type: Acquisition`, `type: Cable`, `type: FiberArray` in an `attrs.yaml`. The container is never the source of the type; it is a check on it: a `type: Acquisition` file inside `fiber_arrays/` fails as "wrong container", and a model-declaring file inside an unrecognized directory is a near-miss (see [Loading Rules](#loading-rules)). The envelope declares `type: Inventory` under the same rule.
 
 **An entity is a file until it needs row-shaped tracks, then it is a directory.** A pathless fiber array can be `fiber_arrays/DAS.L001.yaml`; once it grows an optical path it becomes the directory form — `attrs.yaml` plus track files. An acquisition with a large channel map graduates the same way: `acquisitions/DAS.L001.02.DEC/` holding `attrs.yaml` and `distance_map.csv`. The two forms are spellings of the same identity, so both present at once raises, and an attribute stated inline in `attrs.yaml` *and* as a CSV in the same directory raises.
 
@@ -61,7 +61,7 @@ Individual files never carry `schema_version`; the envelope versions the documen
 
 ## Tracks: CSV
 
-Inside an entity directory, a CSV is matched to the model purely by name: **`<name>.csv` populates the attribute `<name>` of the type declared in `attrs.yaml`.** `geometry.csv` fills `OpticalPath.geometry`, `coupling.csv` fills `OpticalPath.coupling`, `distance_map.csv` fills `Acquisition.distance_map`. There is no lookup table in the loader, and a CSV whose stem matches no attribute of the declared type raises — a typo like `geometrys.csv` fails loudly instead of loading as field notes.
+Inside an entity directory, a CSV is matched to the model purely by name: **`<name>.csv` populates the attribute `<name>` of the type declared in `attrs.yaml`.** `geometry.csv` fills `OpticalPath.geometry`, `coupling.csv` fills `OpticalPath.coupling`, `distance_map.csv` fills `Acquisition.distance_map`. A CSV whose stem matches no attribute of the declared type raises (e.g., the typo `geometrys.csv`).
 
 How rows map onto objects is a property of the attribute's type, and there are exactly two shapes:
 
@@ -76,7 +76,7 @@ distance,optical_length,coupling_type,notes
 340,15,trench,backfilled
 ```
 
-`optical_components.csv` holds a union of component types, so like any union container it carries a `type` column. It also carries a required `sequence` column, because components are the one track placed by order rather than by explicit distances: each component starts where the previous one ends, which is what makes total optical length canonical. The loader orders rows by `sequence`, never by row position — so sorting the sheet in a spreadsheet is harmless, since the numbers travel with their rows and the loader restores the true order. Duplicate or non-increasing values raise. A filled cell in a column that does not pertain to the row's type is a row-level error:
+`optical_components.csv` holds a union of component types, so like any union container it carries a `type` column. It also carries a required `sequence` column, because components are placed by order: each starts where the previous ends. The loader orders rows by `sequence`, never row position, so re-sorting a spreadsheet is harmless; duplicate or non-increasing values raise. A filled cell in a column that does not pertain to the row's type is a row-level error:
 
 ```csv
 sequence,type,optical_length,name,container,fiber_index,color
@@ -84,7 +84,7 @@ sequence,type,optical_length,name,container,fiber_index,color
 2,splice,0.1,splice 1,,,
 ```
 
-`geometry.csv` columns are named by the CRS `coordinate_labels` — `latitude,longitude,elevation` under the default CRS, or whatever the envelope declares for a local grid (this example's envelope declares `coordinate_labels: [x, y, elevation]`) — so the loader validates geometry against the declared frame. Its `segment` column groups rows into `Geometry` objects, the way the `type` column groups columns into a union:
+`geometry.csv` columns are named by the CRS `coordinate_labels` — `latitude,longitude,elevation` under the default CRS, or whatever the envelope declares for a local grid (this example's envelope declares `coordinate_labels: [x, y, elevation]`) — so the loader validates geometry against the declared frame. Its `segment` column groups rows into `Geometry` objects:
 
 ```csv
 segment,distance,x,y,elevation
@@ -94,7 +94,7 @@ S120,1202.0,2562051.10,1137380.20,687.1
 S120,1204.0,2562051.02,1137380.31,685.1
 ```
 
-Segments are piecewise: coordinates interpolate within a segment, never across, and optical distance covered by no segment (lead cable between boreholes, in this example) has undefined coordinates — enrichment yields NaN there and coordinate selection cannot match it. The loader builds one `Geometry` per unique `segment` value, ordering its rows by `distance`; interpolation spans the object's whole range, so physically distinct features need distinct segment names, and overlapping segments raise. A coil is authored as repeated coordinates while `distance` advances. As everywhere in DASCore, `distance` is optical distance; converting borehole-depth surveys to optical distance is an authoring-time step. Segment names may coincide with annotation labels (a borehole is naturally both), but the tracks stay independent.
+Segments are [piecewise](../Model/optical-path.qmd#geometry): interpolation never crosses segments, and uncovered distance (the lead cable between boreholes here) is undefined. The loader builds one `Geometry` per unique `segment` value, ordering its rows by `distance`; interpolation spans the object's whole range, so distinct features need distinct segment names, and overlapping segments raise. A coil is authored as repeated coordinates while `distance` advances. As everywhere in DASCore, `distance` is optical distance; converting borehole-depth surveys is an authoring-time step. Segment names may coincide with annotation labels, but the tracks stay independent.
 
 `distance_map.csv` is the other point-per-row table: measured control points mapping an acquisition's channel-like coordinate onto path distance. Its input column declares the axis — `channel` when the interrogator reports channel numbers, `instrument_distance` when it reports its own nominal meters — and the output column is always `distance`, the path axis. Exactly one input column may be present:
 
@@ -104,7 +104,7 @@ channel,distance
 1710,1698.0
 ```
 
-The map is a function, not a roster: it answers where a channel would fall, without listing which channels exist, so control points are only needed where the slope changes. Straight runs cost two points regardless of length, and a zone-selected acquisition (record two boreholes, skip the lead cable between) is two points per zone with the slope break falling out of piecewise-linear interpolation. Small maps can stay inline in the acquisition YAML under the same key names; the CSV form is for when a spreadsheet is the better editor.
+Control points are needed only where the slope changes: a straight run costs two points regardless of length, and a zone-selected acquisition (two boreholes, lead cable skipped) is two points per zone. Small maps can stay inline in the acquisition YAML under the same key names; the CSV form is for when a spreadsheet is the better editor.
 
 An empty cell means unset, never an empty string. The one blank-meaningful code, `location_code`, therefore never rides in a cell: it appears as an empty token in dotted names (`DAS.L001..RAW`) or as the bare `path` stem.
 
@@ -118,19 +118,19 @@ Each `path*/` directory under a fiber array is one `OpticalPath` epoch — an en
 
 `path` is the one reserved container stem: unlike attribute CSVs, these directories are not serializing an attribute — they address a child entity whose name carries its epoch. The declared type must still agree with the container: `type: Acquisition` inside a `path*/` directory raises.
 
-Within one location's lineage, epochs are non-overlapping by construction: sorted by start time, each epoch implicitly ends where the next begins, and the last is ongoing. There is no required end time to get wrong, so the forbidden state — overlapping optical paths — stays unrepresentable by default, and recording a fiber break is purely additive: create the new epoch directory and leave the old one untouched. An epoch's `attrs.yaml` may state an explicit earlier `end_time` — recording a dark interval or a retired lineage — which must not exceed the next epoch's start (overlap raises); the implicit end is simply the default.
+Within one location's lineage, epochs are non-overlapping by construction: sorted by start time, each epoch implicitly ends where the next begins, and the last is ongoing. Recording a fiber break is additive: create the new epoch directory; the old one is untouched. An epoch's `attrs.yaml` may state an explicit earlier `end_time` — a dark interval or retired lineage — which must not exceed the next epoch's start (overlap raises).
 
 There is no carry-forward between epochs; each states its tracks completely. Copying a CSV forward and editing it is the intended workflow.
 
-Acquisitions and fiber arrays epoch differently from paths: their in-file times are authoritative, because unlike paths they may leave gaps — an instrument off for six weeks is an epoch that set its `end_time` followed by an epoch whose `@` start is later, and patches inside the gap resolve to nothing (reported by the attach policy). Adjacent epochs may abut exactly; half-open intervals hand the boundary instant to the newer epoch. Overlapping same-code epochs raise at load. The `@` suffix never carries semantics of its own — it exists for filename uniqueness and restates the start time, agree-or-raise.
+Acquisitions and fiber arrays epoch differently from paths: their in-file times are authoritative, because unlike paths they may leave gaps — an instrument off for six weeks is an epoch that set its `end_time` followed by an epoch whose `@` start is later, and patches inside the gap resolve to nothing (reported by the attach policy). Adjacent epochs may abut exactly; [half-open intervals](../Model/model.qmd#model-constraints) hand the boundary to the newer epoch. Overlapping same-code epochs raise at load.
 
-Timestamps in names use ISO 8601 basic format for the time portion (`2024-05-12T103000`, fractional seconds as `T103000.12`) because `:` is not a legal filename character on Windows. Date-only forms (`@2024-06-01`) are valid when that precision suffices. All timestamps are UTC, and timezone designators are not allowed — no `Z`, no offsets; a naive timestamp means UTC, so an instant never has two spellings by offset. Epoch-name uniqueness is temporal, not textual: two names resolving to the same instant (`path@2024-06-01/` and `path@2024-06-01T000000/`) raise as duplicate epochs, as does a zero-length epoch such as a `path@` time equal to the fiber array's start.
+Timestamps in names use ISO 8601 basic format for the time portion (`2024-05-12T103000`, fractional seconds as `T103000.12`) because `:` is not a legal filename character on Windows. Date-only forms (`@2024-06-01`) are valid when that precision suffices. All timestamps are UTC, and timezone designators are not allowed — no `Z`, no offsets; naive means UTC. Epoch-name uniqueness is temporal, not textual: two names resolving to the same instant (`path@2024-06-01/` and `path@2024-06-01T000000/`) raise as duplicate epochs, as does a zero-length epoch such as a `path@` time equal to the fiber array's start.
 
 ## The Envelope
 
-`inventory.yaml` declares `type: Inventory` and holds only the document-level singleton fields — `schema_version`, `resource_id`, `creation_info`, and `coordinate_reference_system` — never the collections, which live in the directory structure. The CRS is implicit by default (the standard geographic CRS, per the model); declare it in the envelope only to override it for exceptional frames such as mines or laboratories. It never gets its own file: singletons have no identity to put in a filename.
+`inventory.yaml` declares `type: Inventory` and holds only the document-level singleton fields — `schema_version`, `resource_id`, `creation_info`, and `coordinate_reference_system` — never the collections, which live in the directory structure. The CRS is implicit by default (the standard geographic CRS, per the model); declare it in the envelope only to override it for exceptional frames such as mines or laboratories. Singletons never get their own file.
 
-The envelope itself is optional while authoring — a bare directory of fiber arrays and acquisitions loads with defaults — but `to_yaml()` always writes a fully explicit envelope, so the interchange artifact is pinned even when the workbench is loose.
+The envelope itself is optional while authoring — a bare directory of fiber arrays and acquisitions loads with defaults — but `to_yaml()` always writes a fully explicit envelope.
 
 ## Loading Rules
 

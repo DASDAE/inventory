@@ -7,7 +7,7 @@ sidebar: examples
 This example is still under development; don't read too closely yet.
 :::
 
-This example sketches a DASDAE inventory for the [NORFOX fibre-optic array](https://www.norsar.no/data/norfox-fibre-optic-array-data), a five-arm fiber-optic deployment at NORSAR's Stendammen test site. The goal is to show how a complex public deployment can be represented by the DASDAE Inventory. Some liberties are taken with certain details, as the point of the exercise is demonstration, not exact accuracy.
+This example sketches a DASDAE inventory for the [NORFOX fibre-optic array](https://www.norsar.no/data/norfox-fibre-optic-array-data), a five-arm fiber-optic deployment at NORSAR's Stendammen test site. It shows how a complex public deployment can be represented; some details take liberties for demonstration.
 
 ![NORFOX cable path and NORES stations, from the NORSAR NORFOX data page](https://www.norsar.no/getfile.php/1319603-1696855994/Filer/Map_v1%281%29.jpg%20%28content%29.jpg){#fig-norfox-cable-path fig-cap="[NORFOX cable path and NORES stations](https://www.norsar.no/data/norfox-fibre-optic-array-data), image hosted by NORSAR."}
 
@@ -137,7 +137,7 @@ def arm_acquisitions(arm):
 
 ### Cables And Pipe Enclosures
 
-NORFOX is a good example of why container nesting is useful. Each arm has two fiber cables and multiple empty pipes. The cables and pipe enclosures are physical resources; the ordered optical path only contains components the light passes through.
+Each arm has two fiber cables and multiple empty pipes. The cables and pipe enclosures are physical resources; the ordered optical path only contains components the light passes through.
 
 ```python
 def arm_resources(arm):
@@ -207,7 +207,7 @@ The intended behavior is:
 - spread a `distance` coordinate across the given range along the imported sequence;
 - reverse the coordinate sequence when `reverse=True`, so the return geometry retraces the outbound route over its own optical-distance range.
 
-This keeps the example reproducible while still treating calibrated optical distance as inventory metadata, not something inferred blindly from map distance.
+Calibrated optical distance stays inventory metadata, not something inferred from map distance.
 
 ### Optical Components
 
@@ -271,7 +271,7 @@ def arm_annotation(arm):
 
 ### Arm Fiber Arrays
 
-Each arm is a separate [FiberArray](../References/FiberArray.qmd) carrying a single [OpticalPath](../References/OpticalPath.qmd). The arms are dissimilar routes — five directions radiating from one facility — so under the granularity rule they are five fiber arrays, one observing identity per route. (Similar co-located fibers, such as two fibers sharing one cable, would instead be location codes under a single array.) This also keeps arm-level changes cheap to represent: a break or repair on Arm C becomes an additive path epoch under `NFXC` while the other arms' metadata is untouched. A different implementation could use one compound path with arm annotations if the acquisition stream is stored as one continuous channel axis.
+Each arm is a separate [FiberArray](../References/FiberArray.qmd) carrying a single [OpticalPath](../References/OpticalPath.qmd). The arms are dissimilar routes, so under the [granularity rule](../Model/model.qmd) they are five fiber arrays. A break on Arm C becomes a path epoch under `NFXC`; the other arms are untouched. A different implementation could use one compound path with arm annotations if the acquisition stream is stored as one continuous channel axis.
 
 ```python
 fiber_arrays = []
@@ -334,7 +334,7 @@ nores_stations = inv.Station.from_stationxml(
 physical_resources.extend((station_network_reference, eida_access))
 ```
 
-The important point is that conventional seismic metadata should remain conventional. StationXML is already the exchange format for station coordinates, channels, epochs, and instrument responses; the DASDAE inventory only needs to attach the resulting stations beside the fiber array.
+Conventional seismic metadata stays conventional: StationXML remains the exchange format, and the inventory attaches the resulting stations beside the fiber arrays.
 
 ### Assemble The Inventory
 
@@ -361,7 +361,7 @@ inventory = inv.Inventory(
 
 NORFOX touches most of the model boundaries:
 
-- Dissimilar concurrent routes are separate `FiberArray` identities; similar co-located fibers would be location codes under one array.
+- Five dissimilar arms, five fiber arrays (the granularity rule).
 - KML-derived arm geometries are separate from calibrated optical distance.
 - Two fiber cable types are represented as physical resources.
 - Empty pipes are [Enclosure](../References/Enclosure.qmd) resources with `enclosure_type="pipe"`, not optical components.

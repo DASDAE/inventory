@@ -5,7 +5,7 @@ sidebar: examples
 
 Most deployments begin with exactly two artifacts: the data files and a spreadsheet mapping channels to coordinates. This page walks that spreadsheet into a minimal, valid inventory.
 
-The skeleton below is deliberately small, and none of it is invented: **every required value is an instrument setting the operator already made.** Channel spacing, gauge length, sample rate, and measurement range must be keyed into an interrogator before it will record a single sample — the measurement range even bounds the pulse rate, since each pulse must clear the fiber round trip before the next fires. Vendors write these into the file headers. If you could configure the interrogator, you can fill in the inventory.
+The skeleton below is deliberately small, and none of it is invented: **every required value is an instrument setting the operator already made** — channel spacing, gauge length, sample rate, measurement range — and vendors write them into the file headers.
 
 ## The Starting Point
 
@@ -84,7 +84,7 @@ inventory = inv.Inventory(
 )
 ```
 
-That is the whole skeleton: one acquisition restating the instrument configuration, one fiber segment stating the recorded range, one geometry segment carrying the survey, and the three containers that give the data its address, `DAS.L001.00.RAW`.
+That is the whole skeleton; the containers give the data its address, `DAS.L001.00.RAW`.
 
 ## Use It
 
@@ -99,10 +99,10 @@ patch = patch.enrich(
 )
 ```
 
-Two behaviors worth knowing about, both free:
+Two behaviors worth knowing:
 
-- Operators routinely set the measurement range past the physical fiber end. Channels recorded beyond geometry coverage enrich as NaN and cannot match coordinate selections — partial coverage is undefined, not invalid, so the over-set-range habit needs no special handling.
-- The affine channel map above (`start_distance` + `spatial_interval`) trusts the instrument's nominal numbers. When a tap test later shows the wellhead responding twelve channels late, replace `start_distance` with a measured [DistanceMap](../References/DistanceMap.qmd) — a correction, applied in place, retroactive to all the epoch's data.
+- Operators routinely set the measurement range past the physical fiber end. Channels recorded beyond geometry coverage enrich as NaN and cannot match coordinate selections — partial coverage is undefined, not invalid.
+- The affine channel map above (`start_distance` + `spatial_interval`) trusts the instrument's nominal numbers. When a tap test later shows the wellhead responding twelve channels late, replace `start_distance` with a measured [DistanceMap](../References/DistanceMap.qmd) — an in-place [correction](../Model/model.qmd).
 
 ## What To Add When You Know More
 

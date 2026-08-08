@@ -7,92 +7,38 @@ sidebar: api
 
 ## Defining an Inventory
 
-A minimal inventory can be created directly from DASCore's inventory classes. In practice, most users will load this from YAML, but constructing it in Python makes the object relationships explicit.
+A minimal inventory can be created directly from DASCore's inventory classes; in practice most users load one from YAML or a directory. See [Quickstart](../Examples/quickstart.qmd) and [Simple Inventory](../Examples/simple-inventory.qmd) for full walkthroughs.
 
 ```python
 import dascore as dc
 from dascore.core import inventory as inv
 
-interrogator = inv.Interrogator(
-    resource_id="int_01",
-    manufacturer="Example Instruments",
-    model="DAS-1000",
-    serial_number="SN-001",
-)
-
-cable = inv.Cable(
-    resource_id="cable_01",
-    name="L001 cable",
-    fiber_count=4,
-)
-
-geometry = inv.Geometry(
-    name="survey line",
-    distance=(0.0, 1000.0),
-    coordinates=((45.0, -112.0, 1200.0), (45.01, -112.02, 1180.0)),
-)
-
-fiber = inv.FiberSegment(
-    optical_length=1000.0,
-    name="fiber 1",
-    container=cable,
-    fiber_index=1,
-    color="blue",
-)
-
-path = inv.OpticalPath(
-    name="l001_path",
-    location_code="01",
-    start_time="2024-05-01",
-    optical_components=(fiber,),
-    geometry=(geometry,),
-)
-
 acquisition = inv.Acquisition(
-    code="RAW",
-    location_code="01",
-    start_time="2024-05-01",
-    data_category="DAS",
-    data_type="strain_rate",
-    data_units="1/s",
-    interrogator=interrogator,
-    sample_rate=250.0,
-    gauge_length=10.0,
-    spatial_interval=1.0,
-    start_distance=0.0,
+    code="RAW", location_code="01", start_time="2024-05-01",
+    data_category="DAS", data_type="strain_rate", data_units="1/s",
+    sample_rate=250.0, gauge_length=10.0,
+    spatial_interval=1.0, start_distance=0.0,
+    interrogator=inv.Interrogator(model="DAS-1000"),
 )
-
-fiber_array = inv.FiberArray(
-    code="L001",
-    name="L001",
-    start_time="2024-05-01",
-    acquisitions=(acquisition,),
-    optical_paths=(path,),
+path = inv.OpticalPath(
+    name="l001_path", location_code="01", start_time="2024-05-01",
+    optical_components=(inv.FiberSegment(name="fiber 1", optical_length=1000.0),),
+    geometry=(inv.Geometry(
+        name="survey line",
+        distance=(0.0, 1000.0),
+        coordinates=((45.0, -112.0, 1200.0), (45.01, -112.02, 1180.0)),
+    ),),
 )
-
-network = inv.Network(
+inventory = dc.Inventory(networks=(inv.Network(
     code="DAS",
-    name="Example DAS network",
-    fiber_arrays=(fiber_array,),
-)
-
-inventory = dc.Inventory(
-    resource_id="example_inventory",
-    resources={
-        interrogator.resource_id: interrogator,
-        cable.resource_id: cable,
-    },
-    networks=(network,),
-)
+    fiber_arrays=(inv.FiberArray(
+        code="L001", name="L001", start_time="2024-05-01",
+        acquisitions=(acquisition,), optical_paths=(path,),
+    ),),
+),))
 ```
 
-This inventory can resolve patches whose data source ID is:
-
-```text
-DAS.L001.01.RAW
-```
-
-Once resolved, the inventory provides acquisition values such as `sample_rate`, instrument values such as `interrogator.model`, and optical path context such as geometry, coupling, labels, and optical components.
+This inventory resolves patches with `data_source_id` `DAS.L001.01.RAW`, providing acquisition values such as `sample_rate`, instrument values such as `interrogator.model`, and optical path context such as geometry, coupling, labels, and optical components. `FiberArray` identifies the durable observing system; acquisition settings and path interpretation change without changing it.
 
 
 ## Updating an Inventory Component
@@ -137,7 +83,7 @@ new_fiber_array = fiber_array.new(
 inventory_v2 = inventory.replace(fiber_array, new_fiber_array)
 ```
 
-The old epoch ends and the new one begins at the same instant — legal because validity intervals are half-open, so `break_time` itself belongs to the new epoch.
+Intervals are half-open, so `break_time` itself belongs to the new epoch.
 
 Or through a convenience function that addresses the fiber array directly:
 
@@ -147,11 +93,9 @@ inventory_v2 = inventory.register_fiber_break(
 )
 ```
 
-This keeps update logic local to the object being corrected while letting the inventory maintain the nested tree.
-
 ## Patch Resolution
 
-Patch enrichment starts from `data_source_id`. The identifier selects a network, fiber array, acquisition location code, and acquisition code:
+Patch enrichment starts from `data_source_id` ([resolution rules](../Model/model.qmd#model-constraints)):
 
 ```python
 patch = patch.update_attrs(data_source_id="DAS.L001.01.RAW")
@@ -164,8 +108,6 @@ patch = patch.enrich(
 )
 ```
 
-The patch remains lightweight until these methods are called. The inventory stays external, versionable, and reusable across many files.
-
 ## Design Rule
 
-The inventory is corrected in place and epoch-ed additively. Corrections replace objects (`replace`, retroactive — our knowledge changed); epochs append them (a closed path plus its successor — the world changed). Nothing mutates: every update builds a new inventory value, so old references stay valid and updates are explicit in the code that makes them.
+`replace` is a [correction](../Model/model.qmd) (in place, retroactive); appending a closed path plus its successor is an epoch. Nothing mutates: every update builds a new inventory value.

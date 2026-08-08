@@ -10,19 +10,19 @@ sidebar: model
 - [Coupling conditions](../References/CouplingCondition.qmd) describe how the fiber is acoustically coupled.
 - [Annotations](../References/OpticalPathAnnotation.qmd) describe named or categorized intervals.
 
-These tracks are independent because their boundaries often differ. A cable segment, trench section, geometry vertex, and quality note may all start and stop at different optical distances. The total length of all the optical components is considered the canonical optical length.
+These tracks are independent because their boundaries often differ. A cable segment, trench section, geometry vertex, and quality note may all start and stop at different optical distances.
 
-The tracks come in three kinds, and every track's rules follow from its kind. Optical components are the **tiling track**: they cover the whole path exactly once — no gaps, no overlaps — which is what makes total optical length canonical. Geometry and coupling are **function tracks**: at most one value at any optical distance, so enrichment is well-defined; coverage may be partial (uncovered distance is undefined, not invalid), and overlap raises. Annotations are the **set track**: labeled intervals that overlap freely. The acquisition-side [DistanceMap](../References/DistanceMap.qmd) is a function track over the channel axis in the same sense.
+The tracks come in three kinds, and every track's rules follow from its kind. Optical components are the **tiling track**: they cover the whole path exactly once — no gaps, no overlaps — so total component length is the canonical optical length. Geometry and coupling are **function tracks**: at most one value at any optical distance; coverage may be partial (uncovered distance is undefined, not invalid), and overlap raises. Annotations are the **set track**: labeled intervals that overlap freely. The acquisition-side [DistanceMap](../References/DistanceMap.qmd) is a function track over the channel axis in the same sense.
 
 ## Geometry
 
-`Geometry` objects map optical distance onto coordinates. Each object carries paired `distance` and `coordinates` arrays of equal length: at least two strictly increasing optical distances, each the location of its corresponding coordinate, interpreted using the inventory CRS. An object's coverage is exactly the span of its `distance` array (half-open, like every interval in the model) — there is no separate length field, so coverage has one source and nothing to disagree with.
+`Geometry` objects map optical distance onto coordinates: paired `distance` and `coordinates` arrays of equal length, at least two strictly increasing distances, interpreted using the inventory CRS. Coverage is the span of the `distance` array (half-open); there is no separate length field.
 
-Coordinates between listed points are interpreted by piecewise linear interpolation in the inventory CRS. Control points must therefore be dense enough that linearity in the CRS is faithful; where linear-in-degrees breaks down — near the antimeridian or poles, or over long sparse segments — declare a projected local CRS in the envelope, which is the exceptional-frames mechanism doing exactly its job. A coil, slack loop, or clump is a segment whose coordinates repeat while optical distance advances: interpolation between identical points is constant, so every channel in the coil resolves to the coil's location. Vertical coordinates such as `elevation` or `z` are positive-up against the CRS vertical datum.
+Interpolation between listed points is piecewise linear in the inventory CRS, so control points must be dense enough that linearity is faithful; where linear-in-degrees breaks down — near the antimeridian or poles, or over long sparse segments — declare a projected local CRS in the envelope. A coil, slack loop, or clump is a segment whose coordinates repeat while distance advances; every channel in it resolves to the coil's location. Vertical coordinates (`elevation`, `z`) are positive-up against the CRS vertical datum.
 
-A path's geometries act as piecewise segments, and geometry coverage may be partial. Interpolation happens only within a single `Geometry` object — never across segments — and optical distance not covered by any segment has undefined coordinates rather than interpolated ones. This is the common field situation: surveyed boreholes separated by unmapped lead cable. Patch enrichment yields missing values (e.g., NaN) for channels on uncovered distance, and coordinate-based selection cannot match them, so selecting by coordinates on such a path naturally subdivides patches at segment boundaries. Loops that double back (a fiber running down and up the same borehole) are represented directly: optical distance keeps increasing while coordinates retrace. Segments may not overlap — `validate()` raises — so a recalibration replaces the old segment rather than appending beside it: a correction, in place and retroactive.
+Geometries act as piecewise segments: interpolation never crosses segments, and uncovered distance — surveyed boreholes separated by unmapped lead cable — is undefined, enriching as missing values. Loops that double back (a fiber running down and up the same borehole) are represented directly: optical distance keeps increasing while coordinates retrace. Segments may not overlap (`validate()` raises); a recalibration replaces the old segment — a correction.
 
-Geometry should describe where the path is, not what optical material is present. That separation lets a single cable segment cross multiple mapped lines, lets an unmapped lead-in occupy optical distance without coordinates, and lets a later calibration improve the coordinate track without changing the component sequence.
+Geometry describes where the path is, not what optical material is present, so components, coordinates, and calibrations evolve independently.
 
 ## Coupling Conditions
 
@@ -30,14 +30,14 @@ Geometry should describe where the path is, not what optical material is present
 
 `coupling_type` uses a controlled vocabulary: `conduit`, `trench`, `outside_borehole_casing`, `wireline`, `surface`, `coiled`, or `other`. Use `medium` and `attachment` for more specific details such as soil, steel, loose, clamped, bonded, or direct burial.
 
-Each condition is placed by a start `distance` plus `optical_length` — the same interval idiom annotations use. Coverage may be partial: optical distance not covered by any coupling condition is undefined rather than invalid, and enrichment yields missing values there, mirroring the geometry-segment semantics. Conditions may not overlap one another: a channel has at most one coupling state, and layered descriptions ("in conduit *and* under the road") belong on annotations. `depth` is positive-down from the local surface.
+Each condition is placed by a start `distance` plus `optical_length`; coverage and overlap follow the function-track rules above. Layered descriptions ("in conduit *and* under the road") belong on annotations. `depth` is positive-down from the local surface.
 
-Coupling is interval metadata, so it does not need to follow component or geometry boundaries. For example, one fiber segment can include a buried trench interval, a conduit interval, and a loose surface run, each with different coupling behavior.
+Coupling need not follow component or geometry boundaries: one fiber segment can include a buried trench interval, a conduit interval, and a loose surface run.
 
 ## Annotations
 
 `OpticalPathAnnotation` objects attach labels and notes to optical-distance intervals. They are useful for names, operational zones, quality flags, field observations, and analysis regions that should travel with the path but do not belong in geometry or coupling.
 
-Annotations use a start `distance` plus `optical_length`, so they still define an interval while remaining easy to move along the path. They can overlap other tracks and each other.
+Annotations use a start `distance` plus `optical_length`.
 
 The [`OpticalPath` API](../API/optical-path.qmd) makes it simple to update optical paths when breaks occur, segments are added, or broken cable is bypassed.

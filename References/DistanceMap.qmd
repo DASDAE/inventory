@@ -8,7 +8,7 @@ sidebar: references
 Measured control-point map from an acquisition's channel-like coordinate onto optical path distance.
 
 ::: {.note}
-A channel map is a function, not a roster. It answers where a channel would fall on the optical path; it does not list which channels exist. Values between control points are resolved by piecewise linear interpolation, and channels outside the covered range are undefined. Exactly one input axis is populated — channel when the interrogator reports channel numbers, instrument_distance when it reports its own nominal meters. A single-point map takes its interpolation slope from the acquisition's nominal spatial_interval.
+The map is a function, not a roster of existing channels. Values between control points are resolved by piecewise linear interpolation, and channels outside the covered range are undefined. Exactly one input axis is populated — channel when the interrogator reports channel numbers, instrument_distance when it reports its own nominal meters. A single-point map takes its interpolation slope from the acquisition's nominal spatial_interval.
 :::
 
 Aliases: `DistMap`, `Distance map`

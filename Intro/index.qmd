@@ -49,7 +49,7 @@ Managing DFOS metadata is a significant challenge, and there are many different 
     └── <span class="tree-file tree-file-table">distance_pick_updates.csv</span></code></pre>
 :::
 
-However, as the experiment progresses, different versions and revisions of the metadata often appear, more data are collected (perhaps with different interrogators or settings), and more researchers work on the dataset. As each researcher generates and interprets existing metadata, the process quickly becomes hard to manage and bug-prone. Clearly, a data model that is able to capture important information and integrate nicely into existing DFOS processing tools would be a big advantage.
+As the experiment progresses — metadata revisions, more interrogators and settings, more researchers — the process becomes hard to manage and bug-prone.
 
 ::: {.signal-grid}
 ::: {.signal}
@@ -74,14 +74,7 @@ However, as the experiment progresses, different versions and revisions of the m
 <button class="why-not-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#why-not-prodml" aria-expanded="false" aria-controls="why-not-prodml">PRODML</button>
 
 ::: {#why-not-prodml .collapse}
-In some industries, DFOS metadata has been integrated into broader domain standards, such as Energistics' [PRODML](https://energistics.org/prodml-developers-users). PRODML works well within an oil and gas production context, including DAS/DTS use cases, but it does not fit naturally as a general-purpose format for non-oil/gas experiments common in seismology. For example PRODML is:
-
-  - Built for upstream oil/gas production, not standalone DFOS or seismology.
-  - Embedded in a broader wells, pipelines, facilities, flow-test, PVT, and production-volume model.
-  - Assumes the Energistic's XML/EPC/HDF5/reference stack.
-  - Useful for oilfield exchange, but heavy for general DFOS deployments.
-
-Even if PRODML is a bit heavy to adopt wholesale for DASDAE's metadata model, it has useful patterns:
+In some industries, DFOS metadata has been integrated into broader domain standards, such as Energistics' [PRODML](https://energistics.org/prodml-developers-users). PRODML works well within an oil and gas production context, including DAS/DTS use cases, but it is built for upstream production — embedded in a broader wells/pipelines/facilities model and the Energistics XML/EPC/HDF5 stack — which is heavy for general DFOS deployments. It does have useful patterns:
 
 - Separate optical-path topology from acquisition metadata.
 - Model calibration between loci, optical distance, and physical coordinates.
@@ -237,13 +230,3 @@ Hover over an element to see more details, and click to expand its children (if 
 :::
 
 The rest of this site describes the model, shows how it can be used in code, and works through examples for creating and maintaining inventory metadata in fiber-optic deployments.
-
-## Sections
-
-- [Intro](index.qmd) frames the motivation and compares existing approaches.
-- [Model](../Model/model.qmd) explains the object graph, identity model, and standards context.
-- [API](../API/spool.qmd) sketches the conceptual API for spools, inventories, fiber arrays, and optical paths.
-- [Examples](../Examples/index.qmd) provides concrete inventory sketches.
-- [Q&A](../Q&A/index.qmd) answers common modeling questions and edge cases.
-- [Changelog](changelog.qmd) records notable model and documentation changes.
-- [References](../References/index.qmd) lists the generated object reference pages.

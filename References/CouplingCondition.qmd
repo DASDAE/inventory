@@ -8,7 +8,7 @@ sidebar: references
 Acoustic coupling condition for an interval of an optical path.
 
 ::: {.note}
-Coupling conditions are placed by start distance plus optical_length, the same interval idiom annotations use. Coverage may be partial; optical distance not covered by any coupling condition has undefined coupling, and conditions may not overlap one another. All distances are optical distances.
+Coupling conditions are placed by start distance plus optical_length. Coverage may be partial; optical distance not covered by any coupling condition has undefined coupling, and conditions may not overlap one another. All distances are optical distances.
 :::
 
 Aliases: `Coup`, `Coupling`

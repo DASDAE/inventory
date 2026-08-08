@@ -135,8 +135,6 @@ website:
           href: Examples/quickstart.qmd
         - text: "Simple Inventory"
           href: Examples/simple-inventory.qmd
-        - text: "Tunnel Deployment"
-          href: Examples/tunnel.qmd
         - text: "NORFOX"
           href: Examples/norfox.qmd
     - id: qa
@@ -146,8 +144,6 @@ website:
       contents:
         - text: "Overview"
           href: Q&A/index.qmd
-        - text: "Open Questions"
-          href: Q&A/open-questions.qmd
     - id: api
       title: "API"
       style: "floating"
@@ -159,7 +155,5 @@ website:
           href: API/inventory.qmd
         - text: "Authoring"
           href: API/authoring.qmd
-        - text: "FiberArray"
-          href: API/fiber-array.qmd
         - text: "OpticalPath"
           href: API/optical-path.qmd

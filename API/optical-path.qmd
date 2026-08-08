@@ -5,14 +5,6 @@ sidebar: api
 
 `OpticalPath` is the ordered optical-distance model used to project physical metadata onto DAS data. It is linked from a `FiberArray`, carries time validity, and can be operated on directly before being placed back into an `Inventory`.
 
-## Responsibilities
-
-- Store ordered optical components such as fiber segments, connectors, splices, and terminators.
-- Store geometry, coupling, and annotation tracks along optical distance.
-- Resolve coordinates using the path CRS and geometry track.
-- Validate that optical components tile the path length and that populated tracks stay within path bounds; geometry and coupling coverage may be partial.
-- Support path editing operations such as distance selection, splitting, reversing, concatenation, and revision.
-
 ## Path Operations
 
 ```python
@@ -36,7 +28,7 @@ path.validate()
 
 `path_a + path_b` concatenates two paths when their CRS definitions match, rewriting the second path's tracks onto the combined axis.
 
-`validate()` checks that the optical components tile the path's span — `[start_distance, start_distance + total component length)`, with `start_distance` 0 for whole paths and set by `select`/`split_at` on pieces — and that geometry, coupling, and annotation tracks stay within path bounds. Geometry and coupling coverage may be partial; uncovered intervals are undefined rather than invalid. Overlapping geometry segments or coupling conditions raise — they are function tracks, one value per distance — while annotations may overlap freely.
+`validate()` checks that the optical components tile the path's span — `[start_distance, start_distance + total component length)`, with `start_distance` 0 for whole paths and set by `select`/`split_at` on pieces — and that geometry, coupling, and annotation tracks stay within path bounds. Geometry and coupling coverage may be partial; uncovered intervals are undefined rather than invalid. Overlapping geometry segments or coupling conditions raise; annotations may overlap freely.
 
 ## Patch Projection
 
@@ -50,8 +42,8 @@ patch = patch.enrich(
 )
 ```
 
-Coordinate requests can include optical `distance` itself; geometry axes such as `x`, `y`, `z`, `latitude`, `longitude`, and `elevation`; annotation labels via the per-channel `labels` coord; and interval metadata from qualified tracks such as `optical_components.name`, `geometry.name`, `coupling.coupling_type`, or `annotations.label` (`labels` is the shorthand for the last). Qualified names match the model attributes (and the authoring CSV stems) exactly — one name per track everywhere. Because annotations are the set track, explicitly requesting `labels` raises where annotations overlap the requested channels; the general overlapping case belongs to `Spool.split_by_labels`. The blanket `coords=True` form includes `labels` only when the patch's channels are overlap-free and silently omits it otherwise — only an explicit request raises.
+Coordinate requests can include optical `distance` itself; geometry axes such as `x`, `y`, `z`, `latitude`, `longitude`, and `elevation`; annotation labels via the per-channel `labels` coord; and interval metadata from qualified tracks such as `optical_components.name`, `geometry.name`, `coupling.coupling_type`, or `annotations.label` (`labels` is the shorthand for the last). Qualified names match the model attributes (and the authoring CSV stems) exactly. Explicitly requesting `labels` raises where annotations overlap the requested channels; the general overlapping case belongs to `Spool.split_by_labels`. The blanket `coords=True` form includes `labels` only when the patch's channels are overlap-free and silently omits it otherwise — only an explicit request raises.
 
 ## Design Rule
 
-`OpticalPath` is not the raw channel table. Acquisition metadata maps channel or index coordinates into optical distance — through the measured `distance_map` when one exists, else the affine `start_distance`/`spatial_interval` form; the path then maps optical distance into geometry, annotations, coupling, and optical-component context.
+`OpticalPath` is not the raw channel table: the [acquisition maps channels into optical distance](../Model/model.qmd); the path maps optical distance into geometry, annotations, coupling, and optical-component context.
