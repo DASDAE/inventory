@@ -42,7 +42,8 @@ acquisition = inv.Acquisition(
     gauge_length=10.0,
     sample_rate=500.0,
     spatial_interval=SPATIAL_INTERVAL,
-    start_distance=0.0,
+    # The interrogator's own zero is the path origin, one meter for one.
+    distance_map=inv.DistanceMap(instrument_distance=(0.0,), distance=(0.0,)),
 )
 
 # The recorded range: 2048 channels x 1.02 m. One segment states it honestly.
@@ -102,7 +103,7 @@ patch = patch.enrich(
 Two behaviors worth knowing:
 
 - Operators routinely set the measurement range past the physical fiber end. Channels recorded beyond geometry coverage enrich as NaN and cannot match coordinate selections — partial coverage is undefined, not invalid.
-- The affine channel map above (`start_distance` + `spatial_interval`) trusts the instrument's nominal numbers. When a tap test later shows the wellhead responding twelve channels late, replace `start_distance` with a measured [DistanceMap](../References/DistanceMap.qmd) — an in-place [correction](../Model/model.qmd).
+- The one-point map above trusts the instrument's nominal numbers: it states where the interrogator's zero lands on the path and runs one meter for one from there. When a tap test later shows the wellhead responding twelve channels late, add the measured control points to the same [DistanceMap](../References/DistanceMap.qmd) — an in-place [correction](../Model/model.qmd). A map with more than one point interpolates instead of extrapolating, so give it a point at or past the last channel; otherwise every channel beyond the tap point resolves to nothing.
 
 ## What To Add When You Know More
 

@@ -18,7 +18,7 @@ acquisition = inv.Acquisition(
     data_category="DAS", data_type="strain_rate", data_units="1/s",
     sample_rate=250.0, gauge_length=10.0,
     spatial_interval=1.0,
-    distance_map=inv.DistanceMap(channel=(0.0,), distance=(0.0,)),
+    distance_map=inv.DistanceMap(instrument_distance=(0.0,), distance=(0.0,)),
     interrogator=inv.Interrogator(model="DAS-1000"),
 )
 path = inv.OpticalPath(

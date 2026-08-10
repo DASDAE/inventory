@@ -86,7 +86,7 @@ acquisition = inv.Acquisition(
     sample_rate=250.0,
     gauge_length=2.0,
     spatial_interval=1.0,
-    distance_map=inv.DistanceMap(channel=(0.0,), distance=(0.0,)),
+    distance_map=inv.DistanceMap(instrument_distance=(0.0,), distance=(0.0,)),
     software_version="v0.2.1",
 )
 ```

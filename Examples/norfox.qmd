@@ -112,7 +112,7 @@ common_acquisition_fields = dict(
     data_type="strain_rate",
     data_units="1/s",
     spatial_interval=1.0,
-    start_distance=0.0,
+    distance_map=inv.DistanceMap(instrument_distance=(0.0,), distance=(0.0,)),
 )
 
 def arm_acquisitions(arm):

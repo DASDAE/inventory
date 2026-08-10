@@ -117,7 +117,7 @@ channel,distance
 1710,1698.0
 ```
 
-Both may be present, in which case each row is one control point stated in both coordinates, and the patch being enriched decides which column is read:
+Both may be present, in which case each row is one control point stated in both coordinates, and the patch being enriched decides which column is read. Every input column then needs a value in every row — they are the same points, not two overlapping tables — and each column must increase with `distance`, since one interrogator samples at a fixed spacing. As with `geometry.csv`, the loader orders rows by `distance`:
 
 ```csv
 channel,instrument_distance,distance
@@ -125,7 +125,7 @@ channel,instrument_distance,distance
 1710,1746.0,1698.0
 ```
 
-Control points are needed only where the slope changes: a straight run costs two points regardless of length, and a zone-selected acquisition (two boreholes, lead cable skipped) is two points per zone. A single row is the smallest useful map — it states where the interrogator's origin lands on the path, takes the acquisition's `spatial_interval` as its slope on the channel axis (one meter of path per interrogator meter on the other), and, unlike a multi-point map, extrapolates past its control point rather than reporting undefined channels. That is the form to use for a patch whose distance axis is the interrogator's own meters. Small maps can stay inline in the acquisition YAML under the same key names; the CSV form is for when a spreadsheet is the better editor.
+Control points are needed only where the slope changes: a straight run costs two points regardless of length, and a zone-selected acquisition (two boreholes, lead cable skipped) is two points per zone. A single row is the smallest useful map — it states where the interrogator's origin lands on the path, takes the acquisition's `spatial_interval` as its slope on the channel axis (one meter of path per interrogator meter on the other), and, unlike a multi-point map, extrapolates past its control point rather than reporting undefined channels. That is the form to use for a patch whose distance axis is the interrogator's own meters. Small maps can stay inline in the acquisition YAML under the same key names; the CSV form is for when a spreadsheet is the better editor. A point-per-row table has no cell for the map's own `description`, so a map that needs one stays inline.
 
 An empty cell means unset, never an empty string. The one blank-meaningful code, `location_code`, therefore never rides in a cell: it appears as an empty token in dotted names (`DAS.L001..RAW`) or as the bare `path` stem.
 
