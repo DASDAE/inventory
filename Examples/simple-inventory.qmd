@@ -121,7 +121,7 @@ e2000_coupler = inv.Enclosure(
 
 ### Optical Path
 
-The optical path describes the components encountered by the light, along with geometry, coupling, and labels that can later be projected onto patch coordinates.
+The optical path describes the components encountered by the light, along with geometry, coupling, and annotations that can later be projected onto patch coordinates.
 
 #### Components
 
@@ -130,7 +130,7 @@ telemetry_lead = inv.FiberSegment(
     name="Telemetry lead-in fiber",
     optical_length=tap_points.loc["A", "distance"],
     fiber_standard="OS2",
-    color="yellow",
+    fiber_color="yellow",
     description="Not used for sensing.",
     container=telemetry_cable,
 )
@@ -150,7 +150,7 @@ sensing_fiber = inv.FiberSegment(
     fiber_type="das_sensing_cable",
     fiber_standard="Solifos BRUsens DAS AC3",
     buffer_type="armored_sensing_cable",
-    color="blue",
+    fiber_color="blue",
     container=sensing_cable,
 )
 ```
@@ -198,8 +198,12 @@ loose = inv.CouplingCondition(
 #### Annotations
 
 ```python
-trenched_label = inv.OpticalPathAnnotation(start_distance=50.0, end_distance=470.0, label="trenched")
-loose_label = inv.OpticalPathAnnotation(start_distance=470.0, end_distance=770.0, label="loose")
+trenched_zone = inv.OpticalPathAnnotation(
+    start_distance=50.0, end_distance=470.0, group="zone", value="trenched"
+)
+loose_zone = inv.OpticalPathAnnotation(
+    start_distance=470.0, end_distance=770.0, group="zone", value="loose"
+)
 ```
 
 #### Assemble The Path
@@ -216,7 +220,7 @@ optical_path = inv.OpticalPath(
     ),
     geometry=(east_trench, north_trench, surface_run),
     coupling=(trenched, loose),
-    annotations=(trenched_label, loose_label),
+    annotations=(trenched_zone, loose_zone),
 ).validate()
 ```
 

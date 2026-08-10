@@ -38,7 +38,7 @@ inventory = dc.Inventory(networks=(inv.Network(
 ),))
 ```
 
-This inventory resolves patches with `data_source_id` `DAS.L001.01.RAW`, providing acquisition values such as `sample_rate`, instrument values such as `interrogator.model`, and optical path context such as geometry, coupling, labels, and optical components. `FiberArray` identifies the durable observing system; acquisition settings and path interpretation change without changing it.
+This inventory resolves patches with `data_source_id` `DAS.L001.01.RAW`, providing acquisition values such as `sample_rate`, instrument values such as `interrogator.model`, and optical path context such as geometry, coupling, annotations, and optical components. `FiberArray` identifies the durable observing system; acquisition settings and path interpretation change without changing it.
 
 
 ## Updating an Inventory Component
@@ -103,7 +103,7 @@ patch = patch.update_attrs(data_source_id="DAS.L001.01.RAW")
 patch = patch.enrich(
     inventory,
     attrs=("sample_rate", "gauge_length", "interrogator.model"),
-    coords=("distance", "labels", "latitude", "longitude", "elevation"),
+    coords=("distance", "zone", "latitude", "longitude", "elevation"),
     on_missing="nan",
 )
 ```

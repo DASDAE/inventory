@@ -44,7 +44,7 @@ Leave them uncovered — [partial coverage](../Model/optical-path.qmd) is undefi
 annotations:
   - start_distance: 0.0
     end_distance: 50.0
-    label: unknown lead-in
+    group: unknown_lead_in
 ```
 
 Later geometry or coupling updates can fill the interval.
@@ -67,7 +67,7 @@ geometry:
 annotations:
   - start_distance: 1200.0
     end_distance: 1300.0
-    label: slack coil
+    group: slack_coil
     description: Stored coil, not intended as sensing fiber.
 ```
 

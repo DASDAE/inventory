@@ -110,7 +110,7 @@ nodes:
         description: Representative station coordinates ordered according to Inventory.coordinate_reference_system.coordinate_labels.
       - name: "<coordinate_label>"
         type: float
-        description: Dynamic coordinate field named by CoordinateReferenceSystem.coordinate_labels, such as latitude, longitude, elevation, x, y, or z.
+        description: Dynamic coordinate field named by CoordinateReferenceSystem.coordinate_labels, such as latitude, longitude, elevation, depth, x, y, or z.
       - name: channels
         type: tuple[Channel, ...]
         description: Station channels associated with this station.
@@ -141,7 +141,7 @@ nodes:
         description: Channel coordinates ordered according to Inventory.coordinate_reference_system.coordinate_labels.
       - name: "<coordinate_label>"
         type: float
-        description: Dynamic coordinate field named by CoordinateReferenceSystem.coordinate_labels, such as latitude, longitude, elevation, x, y, or z.
+        description: Dynamic coordinate field named by CoordinateReferenceSystem.coordinate_labels, such as latitude, longitude, elevation, depth, x, y, or z.
       - name: sample_rate
         type: float | None
         description: Sample rate in Hz.
@@ -555,12 +555,15 @@ nodes:
       - name: container
         type: Cable | None
         description: Optional physical cable containing this fiber segment.
-      - name: fiber_index
+      - name: fiber_number
         type: int | None
-        description: Fiber number or index within the containing cable, when known.
-      - name: color
+        description: Fiber position within the containing cable, when known.
+      - name: fiber_color
         type: str | None
         description: Fiber color or color code used to identify the fiber segment within its container.
+      - name: refractive_index
+        type: float | None
+        description: Effective group index used to convert optical time of flight to distance; the OTDR group index setting.
       - name: fiber_type
         type: str
         description: Fiber or sensing cable type.
@@ -675,7 +678,8 @@ nodes:
   Ann:
     label: OpticalPathAnnotation
     display: Annotation
-    summary: Named interval on an optical path.
+    summary: Key/value annotation attached to an interval of an optical path.
+    note: The value type decides the group's shape. Boolean groups state membership and may overlap; string and numeric groups are single valued, so their intervals may not overlap.
     attributes:
       - name: start_distance
         type: float
@@ -683,9 +687,12 @@ nodes:
       - name: end_distance
         type: float
         description: End optical distance of this annotation in meters.
-      - name: label
+      - name: group
         type: str
-        description: Human-readable label for this path annotation.
+        description: Name of the annotated variable; becomes the enriched coordinate name.
+      - name: value
+        type: str | bool | int | float
+        description: Value of the variable over this interval; a bare flag is simply a boolean value.
       - name: description
         type: str
         description: Free-text description.

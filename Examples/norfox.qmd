@@ -232,7 +232,7 @@ def arm_optical_components(arm, occ_cable, ofs_cable):
         optical_length=ARM_LENGTH,
         fiber_type="enhanced_backscatter",
         fiber_standard="OFS AcoustiSense",
-        color="blue",
+        fiber_color="blue",
         loss_db=0.7 * ARM_LENGTH / 1000,
         loss_measurement=OFS_DATASHEET,
         container=ofs_cable,
@@ -246,7 +246,7 @@ def arm_optical_components(arm, occ_cable, ofs_cable):
         optical_length=ARM_LENGTH,
         fiber_type="single_mode",
         fiber_standard="G652",
-        color="white",
+        fiber_color="white",
         loss_db=0.3 * ARM_LENGTH / 1000,
         loss_measurement=OCC_DATASHEET,
         container=occ_cable,
@@ -278,7 +278,8 @@ def arm_annotation(arm):
     return inv.OpticalPathAnnotation(
         start_distance=0.0,
         end_distance=2 * ARM_LENGTH,
-        label=f"arm_{arm.lower()}",
+        group="arm",
+        value=arm,
     )
 ```
 

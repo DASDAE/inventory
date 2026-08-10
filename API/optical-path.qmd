@@ -37,12 +37,14 @@ path.validate()
 ```python
 patch = patch.enrich(
     inventory,
-    coords=("distance", "labels", "x", "y", "z", "optical_components.name"),
+    coords=("distance", "rock_type", "x", "y", "z", "optical_components.name"),
     on_missing="nan",
 )
 ```
 
-Coordinate requests can include optical `distance` itself; geometry axes such as `x`, `y`, `z`, `latitude`, `longitude`, and `elevation`; annotation labels via the per-channel `labels` coord; and interval metadata from qualified tracks such as `optical_components.name`, `geometry.name`, `coupling.coupling_type`, or `annotations.label` (`labels` is the shorthand for the last). Qualified names match the model attributes (and the authoring CSV stems) exactly. Explicitly requesting `labels` raises where annotations overlap the requested channels; the general overlapping case belongs to `Spool.split_by_labels`. The blanket `coords=True` form includes `labels` only when the patch's channels are overlap-free and silently omits it otherwise — only an explicit request raises.
+Coordinate requests can include optical `distance` itself; geometry axes such as `x`, `y`, `z`, `latitude`, `longitude`, and `elevation`; any annotation group by name; and interval metadata from qualified tracks such as `optical_components.name`, `geometry.name`, or `coupling.coupling_type`. Qualified names match the model attributes (and the authoring CSV stems) exactly.
+
+Annotation groups enrich according to their value type: a membership group becomes a boolean coordinate (`false` where uncovered), while categorical and numeric groups become single-valued coordinates carrying missing values where uncovered. Because single-valued groups may not overlap, no coordinate request is ambiguous — the model rejects the ambiguity long before enrichment sees it.
 
 ## Design Rule
 

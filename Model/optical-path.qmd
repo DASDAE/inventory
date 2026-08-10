@@ -28,7 +28,7 @@ Geometry describes where the path is, not what optical material is present, so c
 
 `CouplingCondition` objects describe the acoustic or mechanical environment over optical-distance intervals. They capture properties such as `coupling_type`, surrounding `medium`, `attachment`, and `depth`.
 
-`coupling_type` uses a controlled vocabulary: `conduit`, `trench`, `outside_borehole_casing`, `wireline`, `surface`, `coiled`, or `other`. Use `medium` and `attachment` for more specific details such as soil, steel, loose, clamped, bonded, or direct burial.
+`coupling_type` uses a controlled vocabulary: `conduit`, `trench`, `outside_borehole_casing`, `wireline`, `surface`, `aerial`, `coiled`, or `other`. Use `medium` and `attachment` for more specific details such as soil, steel, loose, clamped, bonded, or direct burial.
 
 Each condition covers the half-open interval `[start_distance, end_distance)` — the same idiom as time epochs, and the two numbers read directly off OTDR or interrogator displays; coverage and overlap follow the function-track rules above. Layered descriptions ("in conduit *and* under the road") belong on annotations. `depth` is positive-down from the local surface.
 
@@ -36,8 +36,24 @@ Coupling need not follow component or geometry boundaries: one fiber segment can
 
 ## Annotations
 
-`OpticalPathAnnotation` objects attach labels and descriptions to optical-distance intervals. They are useful for names, operational zones, quality flags, field observations, and analysis regions that should travel with the path but do not belong in geometry or coupling.
+`OpticalPathAnnotation` objects attach key/value facts to optical-distance intervals. They are the extension space for anything that should travel with the path but does not belong in geometry or coupling: operational zones, quality flags, field observations, analysis regions, and user-defined variables of any kind.
 
-Annotations cover `[start_distance, end_distance)`; equal start and end marks a labeled point.
+Each annotation states a `group` — the name of the variable — and a `value` over its interval. The type of the value decides the shape of the group:
+
+| Value | Group shape | Overlap | Uncovered distance |
+|---|---|---|---|
+| `true` (bool) | membership flag | allowed | `false` |
+| `"granite"` (str) | single-valued category | raises | missing |
+| `1.2` (numeric) | single-valued measurement | raises | missing |
+
+A bare flag is simply a boolean value, so `group: noisy` with no value states membership over its interval. Overlap is legal exactly where it is meaningful: two intervals can both flag `noisy`, but one `rock_type` cannot be `granite` and `shale` at the same distance, so single-valued groups raise on overlap. Within a group every value must be the same kind.
+
+Annotations cover `[start_distance, end_distance)`; equal start and end marks a point.
+
+### Annotations And Typed Tracks
+
+Coupling is a typed track rather than an annotation group, and the distinction is deliberate. A typed track carries guarantees an open key/value space cannot: a controlled vocabulary (a mistyped `coupling_type` raises), correlated fields bundled into one record (this trench, with soil, direct-buried, stated together and unable to drift apart), and a fixed place in the standard, so a consumer can rely on coupling existing without discovering each producer's naming conventions.
+
+Annotations are therefore the proving ground, and typed tracks are what a vocabulary graduates into once it proves universal. Anything can start life as an annotation group without a schema change; the ones that turn out to be shared across the community can later become tracks of their own.
 
 The [`OpticalPath` API](../API/optical-path.qmd) makes it simple to update optical paths when breaks occur, segments are added, or broken cable is bypassed.

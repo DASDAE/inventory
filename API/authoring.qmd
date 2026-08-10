@@ -76,10 +76,23 @@ start_distance,end_distance,coupling_type,description
 340,355,trench,backfilled
 ```
 
+`annotations.csv` is the same shape, with `group` naming the variable and `value` holding its state over the interval:
+
+```csv
+start_distance,end_distance,group,value
+0,340,rock_type,granite
+340,900,rock_type,shale
+0,120,noisy,true
+700,900,noisy,true
+120,340,frost_depth,1.2
+```
+
+Cells are text, so values parse by content: `true` and `false` become booleans, anything numeric becomes a number, and everything else stays a string. Every value in one group must parse to the same kind, and a group that mixes kinds raises naming the file and row. A value that is genuinely a string but looks like a boolean or a number is the one case the CSV spelling cannot express; author that group in YAML, where types are explicit.
+
 `optical_components.csv` holds a union of component types, so like any union container it carries a `type` column. It also carries a required `sequence` column, because components are placed by order: each starts where the previous ends. The loader orders rows by `sequence`, never row position, so re-sorting a spreadsheet is harmless; duplicate or non-increasing values raise. A filled cell in a column that does not pertain to the row's type is a row-level error:
 
 ```csv
-sequence,type,optical_length,name,container,fiber_index,color
+sequence,type,optical_length,name,container,fiber_number,fiber_color
 1,fiber_segment,1000.0,fiber 1,cable_01,1,blue
 2,splice,0.1,splice 1,,,
 ```
@@ -94,7 +107,7 @@ S120,1202.0,2562051.10,1137380.20,687.1
 S120,1204.0,2562051.02,1137380.31,685.1
 ```
 
-Segments are [piecewise](../Model/optical-path.qmd#geometry): interpolation never crosses segments, and uncovered distance (the lead cable between boreholes here) is undefined. The loader builds one `Geometry` per unique `segment` value, ordering its rows by `distance`; interpolation spans the object's whole range, so distinct features need distinct segment names, and overlapping segments raise. A coil is authored as repeated coordinates while `distance` advances. As everywhere in DASCore, `distance` is optical distance; converting borehole-depth surveys is an authoring-time step. Segment names may coincide with annotation labels, but the tracks stay independent.
+Segments are [piecewise](../Model/optical-path.qmd#geometry): interpolation never crosses segments, and uncovered distance (the lead cable between boreholes here) is undefined. The loader builds one `Geometry` per unique `segment` value, ordering its rows by `distance`; interpolation spans the object's whole range, so distinct features need distinct segment names, and overlapping segments raise. A coil is authored as repeated coordinates while `distance` advances. As everywhere in DASCore, `distance` is optical distance; converting borehole-depth surveys is an authoring-time step. Segment names may coincide with annotation groups, but the tracks stay independent.
 
 `distance_map.csv` is the other point-per-row table: measured control points mapping an acquisition's channel-like coordinate onto path distance. Its input column declares the axis — `channel` when the interrogator reports channel numbers, `instrument_distance` when it reports its own nominal meters — and the output column is always `distance`, the path axis. Exactly one input column may be present:
 

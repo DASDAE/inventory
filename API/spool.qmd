@@ -36,9 +36,43 @@ patch = raw[0]
 
 Resolution and epoch boundaries are pure metadata, so attaching filters and subdivides the spool's dataframe: `len(spool)` and `get_contents()` reflect exactly what iteration will yield, and only data materializes lazily on extraction. On large archives this makes `attach_inventory` a costly one-time operation.
 
-In inventory-backed selection, a bare track name with `None` matches channels where that track is undefined (uncovered distance is absence, never an empty-string value); actual field values use qualified names such as `coupling.coupling_type`.
+### Selecting On Inventory Metadata
 
-Inventory-backed `select` and `unselect` operate on channels, not whole patches. Contents are trimmed to the matching channels, and when the matching region is disjoint along the fiber — a path that passes in and out of the selected coordinate range, or an undefined-coupling zone in the middle of a path — the patch is subdivided so that each contiguous matching interval becomes its own patch. Selection can therefore change both the shape and the number of patches in the spool. Optical-path validity edges work the same way along time: a fiber can break mid-recording, so a patch straddling a path epoch boundary appears in the index as its pieces, each resolving cleanly to its own window, and the data is split when extracted. `Spool.split_by_labels` (below) applies the same subdivision mechanism to annotation labels.
+Each channel resolves to a single point on the optical path, and that point decides which intervals it belongs to. Channels have physical extent — gauge length is recorded on the acquisition — but membership is decided by the channel's mapped center, so every query has one well-defined answer and boundary channels follow the same half-open rule as the tracks themselves.
+
+Typed tracks are selected by their own name, which matches the track's identity field:
+
+```python
+spool.select(coupling="trench")                  # coupling_type
+spool.select(geometry="borehole-A")              # geometry name
+spool.unselect(optical_component="lead-in")      # component name
+```
+
+A sequence selects the union, and `None` matches channels where the track is undefined (uncovered distance is absence, never an empty-string value):
+
+```python
+spool.select(coupling=["trench", "conduit"])
+spool.unselect(coupling=None)
+```
+
+Other fields of a track use qualified names, which are exact field references and therefore arrive by dict-unpacking. Keyword arguments combine with AND, so both predicates below are evaluated against the one coupling record a channel resolves to:
+
+```python
+spool.select(coupling="trench", **{"coupling.medium": "soil"})
+```
+
+Annotation groups become coordinates named by the group, so they are selected like any other coordinate — no separate entry point:
+
+```python
+spool.select(rock_type="granite")            # categorical group
+spool.select(rock_type=["granite", "shale"]) # union
+spool.select(noisy=True)                     # membership group
+spool.select(frost_depth=(1.0, 2.0))         # numeric groups take ranges, as coords do
+```
+
+Group names are therefore subject to collision rules: a group named after a structural coordinate or a typed track raises when the inventory is checked, and a group colliding with a coordinate a particular patch already carries raises at enrichment.
+
+Inventory-backed `select` and `unselect` operate on channels, not whole patches. Contents are trimmed to the matching channels, and when the matching region is disjoint along the fiber — a path that passes in and out of the selected coordinate range, or an undefined-coupling zone in the middle of a path — the patch is subdivided so that each contiguous matching interval becomes its own patch. Selection can therefore change both the shape and the number of patches in the spool. Optical-path validity edges work the same way along time: a fiber can break mid-recording, so a patch straddling a path epoch boundary appears in the index as its pieces, each resolving cleanly to its own window, and the data is split when extracted. `Spool.split_by` (below) applies the same subdivision mechanism to any inventory-derived coordinate.
 
 Acquisition boundaries are stricter: a configuration change requires stopping and restarting the acquisition, so no valid file spans one. On a straddling file `attach_inventory` raises, naming the file and the boundary; the usual fix is a correction — set the epoch time to the file boundary, the instrument's own record of the restart.
 
@@ -46,13 +80,13 @@ Subdivision reflects exactly what the path metadata says: a noisy geometry track
 
 `attach_inventory` includes a parameter called `enrich`, which is `True` by default. This means each extracted patch from the spool will automatically include the applicable attrs and coords derived from the inventory. The `attrs`, `coords`, and enrich-level `on_missing` keywords pass through `attach_inventory` to that automatic enrichment.
 
-Another useful function is `Spool.split_by_labels`. It will expand the spool to include all (or just some) of the labels. Note, with an inventory, labels are allowed to overlap. Hence, we might create a case where some of the data are included in multiple patches. It may also greatly expand the number of patches in each spool. It simply raises if no inventory is attached.
+Another useful function is `Spool.split_by`. It expands the spool into one patch per value of an inventory-derived coordinate — most often an annotation group. Membership groups are allowed to overlap, so some channels may appear in more than one output patch, and the operation can greatly expand the number of patches. It simply raises if no inventory is attached.
 
 ```python
-labeled_spool = spool.split_by_labels(include=("hole_1", "trench_?a"), exclude=("along_fence",))
+by_zone = spool.split_by("zone", include=("hole_1", "trench_?a"), exclude=("along_fence",))
 ```
 
-Each output patch carries the label it was split on as the singular `label` patch attr, so overlapping siblings remain distinguishable and later operations can select on `label` directly. The plural `labels` names the per-channel coord `enrich` can copy: singular `label` is per-patch, plural `labels` is per-channel.
+Each output patch is stamped with the value it was split on as an attr named after the group (`zone="hole_1"`), so overlapping siblings stay distinguishable and later operations can select on it directly. Pass `stamp=False` to leave existing attrs untouched, which is what nested splits want: splitting by `zone` and then by `quality` should not overwrite the first result.
 
 ### Patch operations
 
