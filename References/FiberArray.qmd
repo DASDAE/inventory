@@ -17,6 +17,7 @@ Aliases: `FA`
 | `name` | str | Human-readable fiber array name. |
 | `start_time` | datetime64 | Start time for which this metadata item is valid. |
 | `end_time` | datetime64 \| None | End time for which this metadata item is valid; None while ongoing. |
+| `identifiers` | tuple[str, ...] | Scheme-prefixed identifier URIs naming this object, e.g. doi:10.7914/SN/XX. |
 | `acquisitions` | tuple[[Acquisition](Acquisition.qmd), ...] | Acquisitions associated with this fiber array. |
 | `optical_paths` | tuple[[OpticalPath](OpticalPath.qmd), ...] | Optical paths associated with this fiber array. |
 | `description` | str | Free-text description. |

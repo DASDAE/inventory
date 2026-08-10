@@ -72,6 +72,9 @@ nodes:
       - name: end_time
         type: datetime64 | None
         description: End time for which this network metadata is valid; None while ongoing.
+      - name: identifiers
+        type: tuple[str, ...]
+        description: Scheme-prefixed identifier URIs naming this object, e.g. doi:10.7914/SN/XX.
       - name: fiber_arrays
         type: tuple[FiberArray, ...]
         description: Fiber arrays associated directly with this network.
@@ -99,6 +102,9 @@ nodes:
       - name: end_time
         type: datetime64 | None
         description: End time for which this station metadata is valid; None while ongoing.
+      - name: identifiers
+        type: tuple[str, ...]
+        description: Scheme-prefixed identifier URIs naming this object, e.g. doi:10.7914/SN/XX.
       - name: coordinates
         type: tuple[float, ...] | None
         description: Representative station coordinates ordered according to Inventory.coordinate_reference_system.coordinate_labels.
@@ -193,6 +199,9 @@ nodes:
       - name: end_time
         type: datetime64 | None
         description: End time for which this metadata item is valid; None while ongoing.
+      - name: identifiers
+        type: tuple[str, ...]
+        description: Scheme-prefixed identifier URIs naming this object, e.g. doi:10.7914/SN/XX.
       - name: acquisitions
         type: tuple[Acquisition, ...]
         description: Acquisitions associated with this fiber array.
