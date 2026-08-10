@@ -8,7 +8,7 @@ sidebar: references
 Key/value annotation attached to an interval of an optical path.
 
 ::: {.note}
-The value type decides the group's shape. Boolean groups state membership and may overlap; string and numeric groups are single valued, so their intervals may not overlap.
+The value type decides the group's shape. Boolean groups state membership and may overlap; string and numeric groups are single valued, so their intervals may not overlap. A group becomes a patch coordinate at enrichment, so it may not take a reserved name — a structural coordinate, a typed track, or a coordinate label.
 :::
 
 Aliases: `Ann`, `Annotation`

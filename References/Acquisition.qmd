@@ -32,7 +32,7 @@ Aliases: `Acq`
 | `pulse_rate` | float \| None | Pulse repetition rate in Hz. |
 | `pulse_width` | float \| None | Pulse width in seconds. |
 | `sample_rate` | float \| None | FDSN-style acquisition sample rate in Hz. |
-| `spatial_interval` | float \| None | Nominal spatial sampling interval between channels in meters. Descriptive instrument metadata; it participates in channel resolution only as the affine slope when no multi-point distance_map is present. |
+| `spatial_interval` | float \| None | Nominal spatial sampling interval between channels in meters. Descriptive instrument metadata; it participates in channel resolution only as the affine slope, or as the slope of a single-point distance_map written on the channel axis. |
 | `start_distance` | float \| None | Optical path distance corresponding to channel or index position 0. Mutually exclusive with distance_map. |
 | `distance_map` | [DistanceMap](DistanceMap.qmd) \| None | Measured map from interrogator-reported channels or distances onto optical path distance. Mutually exclusive with start_distance. |
 | `closed_fiber_loop` | bool | True when the interrogator is attached to both ends of the optical path. |
