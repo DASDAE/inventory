@@ -7,6 +7,10 @@ sidebar: references
 
 Inventory-wide coordinate reference system used by all coordinate-bearing metadata.
 
+::: {.note}
+A CRS declares one to three axes, matching the canonical (x, y, z) storage of every coordinate in the inventory.
+:::
+
 Aliases: `CRS`
 
 ## Attributes
