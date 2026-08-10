@@ -26,7 +26,7 @@ Aliases: `Path`
 | `geometry` | tuple[[Geometry](Geometry.qmd), ...] | Ordered geometries on this path. |
 | `coupling` | tuple[[CouplingCondition](CouplingCondition.qmd), ...] | Ordered coupling conditions on this path. |
 | `annotations` | tuple[[OpticalPathAnnotation](OpticalPathAnnotation.qmd), ...] | Ordered optical path annotations. |
-| `otdr_traces` | tuple[[ExternalResource](ExternalResource.qmd), ...] | References to OTDR traces for this optical path. |
+| `measurements` | tuple[[OpticalMeasurement](OpticalMeasurement.qmd), ...] | OTDR and other optical measurements of this whole path. |
 | `optical_length` | float | Computed total optical length from optical_components. |
 
 ## Contains

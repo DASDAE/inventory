@@ -52,7 +52,7 @@ nodes:
         type: str
         description: Stable identifier used by nested inventory items to refer to a resource.
       - name: members
-        type: Interrogator | Cable | Enclosure | ExternalResource
+        type: Interrogator | Cable | Enclosure | ExternalResource | OpticalMeasurement
         description: Resource-id objects that can be reused across the inventory tree.
   Net:
     label: Network
@@ -450,12 +450,43 @@ nodes:
       - name: annotations
         type: tuple[OpticalPathAnnotation, ...]
         description: Ordered optical path annotations.
-      - name: otdr_traces
-        type: tuple[ExternalResource, ...]
-        description: References to OTDR traces for this optical path.
+      - name: measurements
+        type: tuple[OpticalMeasurement, ...]
+        description: OTDR and other optical measurements of this whole path.
       - name: optical_length
         type: float
         description: Computed total optical length from optical_components.
+  OptMeas:
+    label: OpticalMeasurement
+    display: Measurement
+    style_class: shareable_resource
+    summary: A characterization of the optical path or its components, capturing the conditions loss and reflectance values were obtained under.
+    note: One record per run or claim; every value derived from the same run references the same record. A datasheet claim is a legitimate record (method="datasheet").
+    attributes:
+      - name: resource_id
+        type: str
+        description: Stable identifier for this shareable inventory resource.
+      - name: name
+        type: str
+        description: Human-readable measurement name.
+      - name: method
+        type: str
+        description: How the values were obtained, such as otdr, power_meter, splicer_estimate, or datasheet.
+      - name: time
+        type: datetime64
+        description: Time of the measurement (UTC).
+      - name: wavelength
+        type: float | None
+        description: Measurement wavelength in nanometers.
+      - name: pulse_width
+        type: float | None
+        description: OTDR pulse width in seconds.
+      - name: direction
+        type: str
+        description: Measurement direction, forward or reverse.
+      - name: data
+        type: ExternalResource | None
+        description: The trace or report file, as a resource reference.
   Comp:
     label: OpticalComponent
     display: Component
@@ -468,6 +499,18 @@ nodes:
       - name: name
         type: str
         description: Human-readable component name.
+      - name: loss_db
+        type: float | tuple[float, ...] | None
+        description: One-way transmission loss across this component in dB; multi-wavelength values are equal-length tuples paired with loss_measurement.
+      - name: loss_measurement
+        type: OpticalMeasurement | tuple[OpticalMeasurement, ...] | None
+        description: Measurement record(s) the loss value(s) came from; the record carries the wavelength and instrument settings.
+      - name: reflectance_db
+        type: float | tuple[float, ...] | None
+        description: Return loss (reflectance) of this component in dB, paired with reflectance_measurement.
+      - name: reflectance_measurement
+        type: OpticalMeasurement | tuple[OpticalMeasurement, ...] | None
+        description: Measurement record(s) the reflectance value(s) came from.
       - name: container
         type: Cable | Enclosure | None
         description: Optional physical container housing this optical component.
@@ -500,18 +543,6 @@ nodes:
       - name: buffer_type
         type: str
         description: Buffer, jacket, or cable construction relevant to the fiber segment.
-      - name: attenuation_db_per_km
-        type: float | None
-        description: Attenuation in dB/km for this fiber segment, interpreted as a maximum when sourced from a less-than specification.
-      - name: attenuation_wavelength
-        type: float | None
-        description: Wavelength in nanometers at which attenuation is specified.
-      - name: rayleigh_backscatter_window
-        type: tuple[float, float] | None
-        description: Wavelength interval in nanometers over which Rayleigh backscatter is enhanced.
-      - name: center_wavelength
-        type: float | None
-        description: Center wavelength in nanometers for the fiber segment's enhanced backscatter response.
       - name: notes
         type: str
         description: Additional notes.
@@ -531,9 +562,6 @@ nodes:
       - name: connector_type
         type: str
         description: Connector type, such as E2000, LC, SC, FC, or APC.
-      - name: insertion_loss
-        type: float | None
-        description: Insertion loss in dB, when known.
       - name: notes
         type: str
         description: Additional notes.
@@ -553,9 +581,6 @@ nodes:
       - name: splice_type
         type: str
         description: Splice type, such as fusion or mechanical.
-      - name: insertion_loss
-        type: float | None
-        description: Insertion loss in dB, when known.
       - name: notes
         type: str
         description: Additional notes.
@@ -575,9 +600,6 @@ nodes:
       - name: termination_type
         type: str
         description: Termination type, such as open, capped, angled, or mirrored.
-      - name: reflectance
-        type: float | None
-        description: Return loss or reflectance value, when known.
       - name: notes
         type: str
         description: Additional notes.
@@ -648,6 +670,7 @@ edges:
   - [Refs, Cable]
   - [Refs, Enclosure]
   - [Refs, Ext]
+  - [Refs, OptMeas]
   - [Net, FA]
   - [Net, Station]
   - [FA, Acq]

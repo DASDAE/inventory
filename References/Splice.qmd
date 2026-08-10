@@ -15,7 +15,6 @@ Fused or mechanical splice between optical fiber segments.
 | `name` | str | Human-readable splice name. |
 | `container` | [Enclosure](Enclosure.qmd) \| None | Optional enclosure housing this splice. |
 | `splice_type` | str | Splice type, such as fusion or mechanical. |
-| `insertion_loss` | float \| None | Insertion loss in dB, when known. |
 | `notes` | str | Additional notes. |
 
 ## Contains

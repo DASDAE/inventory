@@ -15,7 +15,6 @@ Joined optical interface between components.
 | `name` | str | Human-readable connector name. |
 | `container` | [Enclosure](Enclosure.qmd) \| None | Optional enclosure housing this connector. |
 | `connector_type` | str | Connector type, such as E2000, LC, SC, FC, or APC. |
-| `insertion_loss` | float \| None | Insertion loss in dB, when known. |
 | `notes` | str | Additional notes. |
 
 ## Contains

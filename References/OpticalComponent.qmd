@@ -15,6 +15,10 @@ Aliases: `Comp`, `Component`
 |---|---|---|
 | `optical_length` | float | Optical component length along the optical path in meters. |
 | `name` | str | Human-readable component name. |
+| `loss_db` | float \| tuple[float, ...] \| None | One-way transmission loss across this component in dB; multi-wavelength values are equal-length tuples paired with loss_measurement. |
+| `loss_measurement` | [OpticalMeasurement](OpticalMeasurement.qmd) \| tuple[[OpticalMeasurement](OpticalMeasurement.qmd), ...] \| None | Measurement record(s) the loss value(s) came from; the record carries the wavelength and instrument settings. |
+| `reflectance_db` | float \| tuple[float, ...] \| None | Return loss (reflectance) of this component in dB, paired with reflectance_measurement. |
+| `reflectance_measurement` | [OpticalMeasurement](OpticalMeasurement.qmd) \| tuple[[OpticalMeasurement](OpticalMeasurement.qmd), ...] \| None | Measurement record(s) the reflectance value(s) came from. |
 | `container` | [Cable](Cable.qmd) \| [Enclosure](Enclosure.qmd) \| None | Optional physical container housing this optical component. |
 
 ## Contains

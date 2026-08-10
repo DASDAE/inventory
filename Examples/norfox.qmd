@@ -212,6 +212,20 @@ Calibrated optical distance stays inventory metadata, not something inferred fro
 Each arm is represented with an enhanced DAS sensing cable, a splice at the arm end, and the standard fiber return path used to close the loop.
 
 ```python
+OFS_DATASHEET = inv.OpticalMeasurement(
+    resource_id="ofs-datasheet-1550",
+    name="OFS AcoustiSense datasheet",
+    method="datasheet",
+    wavelength=1550,
+)
+OCC_DATASHEET = inv.OpticalMeasurement(
+    resource_id="occ-datasheet-1550",
+    name="OCC G652 datasheet",
+    method="datasheet",
+    wavelength=1550,
+)
+
+
 def arm_optical_components(arm, occ_cable, ofs_cable):
     enhanced_fiber = inv.FiberSegment(
         name=f"NORFOX Arm {arm} OFS AcoustiSense sensing fiber",
@@ -219,10 +233,8 @@ def arm_optical_components(arm, occ_cable, ofs_cable):
         fiber_type="enhanced_backscatter",
         fiber_standard="OFS AcoustiSense",
         color="blue",
-        attenuation_db_per_km=0.7,
-        attenuation_wavelength=1550,
-        rayleigh_backscatter_window=(1530, 1565),
-        center_wavelength=1546,
+        loss_db=0.7 * ARM_LENGTH / 1000,
+        loss_measurement=OFS_DATASHEET,
         container=ofs_cable,
     )
     loop_splice = inv.Splice(
@@ -235,8 +247,8 @@ def arm_optical_components(arm, occ_cable, ofs_cable):
         fiber_type="single_mode",
         fiber_standard="G652",
         color="white",
-        attenuation_db_per_km=0.3,
-        attenuation_wavelength=1550,
+        loss_db=0.3 * ARM_LENGTH / 1000,
+        loss_measurement=OCC_DATASHEET,
         container=occ_cable,
     )
     return enhanced_fiber, loop_splice, return_fiber
