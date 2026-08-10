@@ -42,8 +42,8 @@ Leave them uncovered — [partial coverage](../Model/optical-path.qmd) is undefi
 
 ```yaml
 annotations:
-  - distance: 0.0
-    optical_length: 50.0
+  - start_distance: 0.0
+    end_distance: 50.0
     label: unknown lead-in
 ```
 
@@ -65,8 +65,8 @@ geometry:
       - [500.0, 120.0, 0.0]
 
 annotations:
-  - distance: 1200.0
-    optical_length: 100.0
+  - start_distance: 1200.0
+    end_distance: 1300.0
     label: slack coil
     notes: Stored coil, not intended as sensing fiber.
 ```

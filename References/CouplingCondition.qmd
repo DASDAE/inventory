@@ -8,7 +8,7 @@ sidebar: references
 Acoustic coupling condition for an interval of an optical path.
 
 ::: {.note}
-Coupling conditions are placed by start distance plus optical_length. Coverage may be partial; optical distance not covered by any coupling condition has undefined coupling, and conditions may not overlap one another. All distances are optical distances.
+Coupling conditions cover the half-open interval [start_distance, end_distance), matching the start/end idiom of time epochs; equal start and end marks a point. Coverage may be partial; optical distance not covered by any coupling condition has undefined coupling, and conditions may not overlap one another. All distances are optical distances.
 :::
 
 Aliases: `Coup`, `Coupling`
@@ -17,9 +17,9 @@ Aliases: `Coup`, `Coupling`
 
 | Name | Type | Description |
 |---|---|---|
-| `distance` | float | Start optical distance for this coupling condition in meters. |
-| `optical_length` | float | Optical path interval length described by this coupling in meters. |
-| `coupling_type` | Literal[VALID_COUPLING_TYPES] | Controlled coupling category. Allowed values are conduit, trench, outside_borehole_casing, wireline, surface, coiled, and other. |
+| `start_distance` | float | Start optical distance of this coupling condition in meters. |
+| `end_distance` | float | End optical distance of this coupling condition in meters. |
+| `coupling_type` | Literal[VALID_COUPLING_TYPES] | Controlled coupling category. Allowed values are conduit, trench, outside_borehole_casing, wireline, surface, aerial, coiled, and other. |
 | `medium` | str | Surrounding medium, such as soil, rock, or steel. |
 | `attachment` | str | Attachment method, such as clamped or bonded. |
 | `depth` | float \| None | Depth in meters, positive down, relative to the local surface or deployment reference, when relevant. |

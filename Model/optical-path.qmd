@@ -30,7 +30,7 @@ Geometry describes where the path is, not what optical material is present, so c
 
 `coupling_type` uses a controlled vocabulary: `conduit`, `trench`, `outside_borehole_casing`, `wireline`, `surface`, `coiled`, or `other`. Use `medium` and `attachment` for more specific details such as soil, steel, loose, clamped, bonded, or direct burial.
 
-Each condition is placed by a start `distance` plus `optical_length`; coverage and overlap follow the function-track rules above. Layered descriptions ("in conduit *and* under the road") belong on annotations. `depth` is positive-down from the local surface.
+Each condition covers the half-open interval `[start_distance, end_distance)` — the same idiom as time epochs, and the two numbers read directly off OTDR or interrogator displays; coverage and overlap follow the function-track rules above. Layered descriptions ("in conduit *and* under the road") belong on annotations. `depth` is positive-down from the local surface.
 
 Coupling need not follow component or geometry boundaries: one fiber segment can include a buried trench interval, a conduit interval, and a loose surface run.
 
@@ -38,6 +38,6 @@ Coupling need not follow component or geometry boundaries: one fiber segment can
 
 `OpticalPathAnnotation` objects attach labels and notes to optical-distance intervals. They are useful for names, operational zones, quality flags, field observations, and analysis regions that should travel with the path but do not belong in geometry or coupling.
 
-Annotations use a start `distance` plus `optical_length`.
+Annotations cover `[start_distance, end_distance)`; equal start and end marks a labeled point.
 
 The [`OpticalPath` API](../API/optical-path.qmd) makes it simple to update optical paths when breaks occur, segments are added, or broken cable is bypassed.

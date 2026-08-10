@@ -71,9 +71,9 @@ How rows map onto objects is a property of the attribute's type, and there are e
 Homogeneous tables need no discriminator:
 
 ```csv
-distance,optical_length,coupling_type,notes
+start_distance,end_distance,coupling_type,notes
 0,340,conduit,
-340,15,trench,backfilled
+340,355,trench,backfilled
 ```
 
 `optical_components.csv` holds a union of component types, so like any union container it carries a `type` column. It also carries a required `sequence` column, because components are placed by order: each starts where the previous ends. The loader orders rows by `sequence`, never row position, so re-sorting a spreadsheet is harmless; duplicate or non-increasing values raise. A filled cell in a column that does not pertain to the row's type is a row-level error:

@@ -11,6 +11,7 @@ vocabularies:
     - outside_borehole_casing
     - wireline
     - surface
+    - aerial
     - coiled
     - other
 nodes:
@@ -602,17 +603,17 @@ nodes:
     label: CouplingCondition
     display: Coupling
     summary: Acoustic coupling condition for an interval of an optical path.
-    note: Coupling conditions are placed by start distance plus optical_length. Coverage may be partial; optical distance not covered by any coupling condition has undefined coupling, and conditions may not overlap one another. All distances are optical distances.
+    note: Coupling conditions cover the half-open interval [start_distance, end_distance), matching the start/end idiom of time epochs; equal start and end marks a point. Coverage may be partial; optical distance not covered by any coupling condition has undefined coupling, and conditions may not overlap one another. All distances are optical distances.
     attributes:
-      - name: distance
+      - name: start_distance
         type: float
-        description: Start optical distance for this coupling condition in meters.
-      - name: optical_length
+        description: Start optical distance of this coupling condition in meters.
+      - name: end_distance
         type: float
-        description: Optical path interval length described by this coupling in meters.
+        description: End optical distance of this coupling condition in meters.
       - name: coupling_type
         type: Literal[VALID_COUPLING_TYPES]
-        description: Controlled coupling category. Allowed values are conduit, trench, outside_borehole_casing, wireline, surface, coiled, and other.
+        description: Controlled coupling category. Allowed values are conduit, trench, outside_borehole_casing, wireline, surface, aerial, coiled, and other.
       - name: medium
         type: str
         description: Surrounding medium, such as soil, rock, or steel.
@@ -630,12 +631,12 @@ nodes:
     display: Annotation
     summary: Named interval on an optical path.
     attributes:
-      - name: distance
+      - name: start_distance
         type: float
-        description: Start optical distance for this annotation.
-      - name: optical_length
+        description: Start optical distance of this annotation in meters.
+      - name: end_distance
         type: float
-        description: Optical path interval length described by this annotation in meters.
+        description: End optical distance of this annotation in meters.
       - name: label
         type: str
         description: Human-readable label for this path annotation.

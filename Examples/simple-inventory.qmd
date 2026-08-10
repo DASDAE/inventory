@@ -181,15 +181,15 @@ The 50 m telemetry lead-in has no survey, so it stays uncovered.
 
 ```python
 trenched = inv.CouplingCondition(
-    distance=50.0,
-    optical_length=420.0,
+    start_distance=50.0,
+    end_distance=470.0,
     coupling_type="trench",
     medium="soil",
     attachment="direct_burial",
 )
 loose = inv.CouplingCondition(
-    distance=470.0,
-    optical_length=300.0,
+    start_distance=470.0,
+    end_distance=770.0,
     coupling_type="surface",
     attachment="loose",
 )
@@ -198,8 +198,8 @@ loose = inv.CouplingCondition(
 #### Annotations
 
 ```python
-trenched_label = inv.OpticalPathAnnotation(distance=50.0, optical_length=420.0, label="trenched")
-loose_label = inv.OpticalPathAnnotation(distance=470.0, optical_length=300.0, label="loose")
+trenched_label = inv.OpticalPathAnnotation(start_distance=50.0, end_distance=470.0, label="trenched")
+loose_label = inv.OpticalPathAnnotation(start_distance=470.0, end_distance=770.0, label="loose")
 ```
 
 #### Assemble The Path

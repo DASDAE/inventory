@@ -251,20 +251,23 @@ The public installation description says the cables are buried about 50 cm below
 ```python
 def arm_couplings(arm):
     kwargs = dict(
-        optical_length=ARM_LENGTH,
         coupling_type="trench",
         medium="forest_soil",
         attachment="direct_burial",
         depth=0.5,
     )
-    outbound = inv.CouplingCondition(distance=0.0, **kwargs)
-    inbound = inv.CouplingCondition(distance=ARM_LENGTH, **kwargs)
+    outbound = inv.CouplingCondition(
+        start_distance=0.0, end_distance=ARM_LENGTH, **kwargs
+    )
+    inbound = inv.CouplingCondition(
+        start_distance=ARM_LENGTH, end_distance=2 * ARM_LENGTH, **kwargs
+    )
     return outbound, inbound
 
 def arm_annotation(arm):
     return inv.OpticalPathAnnotation(
-        distance=0.0,
-        optical_length=2 * ARM_LENGTH,
+        start_distance=0.0,
+        end_distance=2 * ARM_LENGTH,
         label=f"arm_{arm.lower()}",
     )
 ```

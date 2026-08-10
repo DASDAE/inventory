@@ -13,8 +13,8 @@ Aliases: `Ann`, `Annotation`
 
 | Name | Type | Description |
 |---|---|---|
-| `distance` | float | Start optical distance for this annotation. |
-| `optical_length` | float | Optical path interval length described by this annotation in meters. |
+| `start_distance` | float | Start optical distance of this annotation in meters. |
+| `end_distance` | float | End optical distance of this annotation in meters. |
 | `label` | str | Human-readable label for this path annotation. |
 | `notes` | str | Additional notes. |
 
