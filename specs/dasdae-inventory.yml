@@ -321,15 +321,6 @@ nodes:
       - name: diameter
         type: float | None
         description: Outer cable diameter in meters.
-      - name: strength_member
-        type: str
-        description: Cable strength member material or construction.
-      - name: maximum_load
-        type: float | None
-        description: Maximum cable load in newtons.
-      - name: minimum_bend_radius
-        type: float | None
-        description: Minimum cable bend radius in meters.
       - name: specification
         type: ExternalResource | None
         description: External cable specification, datasheet, or product page.

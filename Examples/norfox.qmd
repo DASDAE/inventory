@@ -155,9 +155,7 @@ def arm_resources(arm):
         model="AcoustiSense",
         fiber_count=1,
         diameter=0.0095,
-        strength_member="Aramid Yarn",
-        maximum_load=200,
-        minimum_bend_radius=0.475,
+        notes="Aramid yarn strength member.",
     )
     pipe_enclosures = [
         inv.Enclosure(

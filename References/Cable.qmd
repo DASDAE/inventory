@@ -22,9 +22,6 @@ Cable containers are intentionally limited. A cable can be inside an enclosure o
 | `model` | str | Model name of the cable. |
 | `serial_number` | str | Manufacturer serial number for the cable. |
 | `diameter` | float \| None | Outer cable diameter in meters. |
-| `strength_member` | str | Cable strength member material or construction. |
-| `maximum_load` | float \| None | Maximum cable load in newtons. |
-| `minimum_bend_radius` | float \| None | Minimum cable bend radius in meters. |
 | `specification` | [ExternalResource](ExternalResource.qmd) \| None | External cable specification, datasheet, or product page. |
 | `container` | [Enclosure](Enclosure.qmd) \| [Cable](Cable.qmd) \| None | Optional containing physical asset, such as an enclosure, pipe, duct, or larger cable assembly. |
 | `fiber_count` | int \| None | Number of fibers contained in the cable. |
