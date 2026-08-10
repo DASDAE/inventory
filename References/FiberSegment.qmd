@@ -21,7 +21,7 @@ Aliases: `Fiber segment`
 | `fiber_type` | str | Fiber or sensing cable type. |
 | `fiber_standard` | str | Fiber standard, product family, or specification name. |
 | `buffer_type` | str | Buffer, jacket, or cable construction relevant to the fiber segment. |
-| `notes` | str | Additional notes. |
+| `description` | str | Free-text description. |
 
 ## Contains
 

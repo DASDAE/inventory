@@ -102,7 +102,7 @@ telemetry_cable = inv.Cable(
     name="Telemetry lead-in cable",
     owner="Example Operator",
     fiber_count=1,
-    notes="Armored patch lead-in cable from interrogator.",
+    description="Armored patch lead-in cable from interrogator.",
 )
 
 sensing_cable = inv.Cable(
@@ -131,7 +131,7 @@ telemetry_lead = inv.FiberSegment(
     optical_length=tap_points.loc["A", "distance"],
     fiber_standard="OS2",
     color="yellow",
-    notes="Not used for sensing.",
+    description="Not used for sensing.",
     container=telemetry_cable,
 )
 lead_in_connector = inv.Connector(

@@ -15,7 +15,7 @@ Joined optical interface between components.
 | `name` | str | Human-readable connector name. |
 | `container` | [Enclosure](Enclosure.qmd) \| None | Optional enclosure housing this connector. |
 | `connector_type` | str | Connector type, such as E2000, LC, SC, FC, or APC. |
-| `notes` | str | Additional notes. |
+| `description` | str | Free-text description. |
 
 ## Contains
 

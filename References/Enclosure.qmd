@@ -22,7 +22,7 @@ Physical housing, assembly, pipe, duct, conduit, or carrier resource for optical
 | `inner_diameter` | float \| None | Inner diameter in meters, when known. |
 | `outer_diameter` | float \| None | Outer diameter in meters, when known. |
 | `specification` | [ExternalResource](ExternalResource.qmd) \| None | External enclosure specification, datasheet, drawing, or product page. |
-| `notes` | str | Additional notes. |
+| `description` | str | Free-text description. |
 
 ## Contains
 

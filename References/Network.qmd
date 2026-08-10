@@ -15,10 +15,9 @@ Aliases: `Net`
 |---|---|---|
 | `code` | str | Network code. |
 | `name` | str | Human-readable network name. |
-| `description` | str | Network description. |
 | `fiber_arrays` | tuple[[FiberArray](FiberArray.qmd), ...] | Fiber arrays associated directly with this network. |
 | `stations` | tuple[[Station](Station.qmd), ...] | Station-level observing identities associated with this network. |
-| `notes` | str | Additional notes. |
+| `description` | str | Free-text description. |
 
 ## Contains
 

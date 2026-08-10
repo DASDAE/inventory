@@ -155,7 +155,7 @@ def arm_resources(arm):
         model="AcoustiSense",
         fiber_count=1,
         diameter=0.0095,
-        notes="Aramid yarn strength member.",
+        description="Aramid yarn strength member.",
     )
     pipe_enclosures = [
         inv.Enclosure(
@@ -341,7 +341,7 @@ nores_stationxml = eida.get_stations(
 nores_stations = inv.Station.from_stationxml(
     nores_stationxml,
     include_response=False,
-    notes="Co-located NORES seismometer imported from standard StationXML.",
+    description="Co-located NORES seismometer imported from standard StationXML.",
 )
 
 physical_resources.extend((station_network_reference, eida_access))

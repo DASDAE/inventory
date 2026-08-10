@@ -66,18 +66,15 @@ nodes:
       - name: name
         type: str
         description: Human-readable network name.
-      - name: description
-        type: str
-        description: Network description.
       - name: fiber_arrays
         type: tuple[FiberArray, ...]
         description: Fiber arrays associated directly with this network.
       - name: stations
         type: tuple[Station, ...]
         description: Station-level observing identities associated with this network.
-      - name: notes
+      - name: description
         type: str
-        description: Additional notes.
+        description: Free-text description.
   Station:
     label: Station
     style_class: monitoring
@@ -105,9 +102,9 @@ nodes:
       - name: channels
         type: tuple[Channel, ...]
         description: Station channels associated with this station.
-      - name: notes
+      - name: description
         type: str
-        description: Additional notes.
+        description: Free-text description.
   Channel:
     label: Channel
     style_class: instrument
@@ -184,9 +181,9 @@ nodes:
       - name: optical_paths
         type: tuple[OpticalPath, ...]
         description: Optical paths associated with this fiber array.
-      - name: notes
+      - name: description
         type: str
-        description: Additional notes.
+        description: Free-text description.
   Acq:
     label: Acquisition
     display: Acquisition
@@ -330,9 +327,9 @@ nodes:
       - name: fiber_count
         type: int | None
         description: Number of fibers contained in the cable.
-      - name: notes
+      - name: description
         type: str
-        description: Additional notes.
+        description: Free-text description.
   Enclosure:
     label: Enclosure
     style_class: shareable_resource
@@ -371,9 +368,9 @@ nodes:
       - name: specification
         type: ExternalResource | None
         description: External enclosure specification, datasheet, drawing, or product page.
-      - name: notes
+      - name: description
         type: str
-        description: Additional notes.
+        description: Free-text description.
   CRS:
     label: CoordinateReferenceSystem
     display: CRS
@@ -546,9 +543,9 @@ nodes:
       - name: buffer_type
         type: str
         description: Buffer, jacket, or cable construction relevant to the fiber segment.
-      - name: notes
+      - name: description
         type: str
-        description: Additional notes.
+        description: Free-text description.
   Connector:
     label: Connector
     summary: Joined optical interface between components.
@@ -565,9 +562,9 @@ nodes:
       - name: connector_type
         type: str
         description: Connector type, such as E2000, LC, SC, FC, or APC.
-      - name: notes
+      - name: description
         type: str
-        description: Additional notes.
+        description: Free-text description.
   Splice:
     label: Splice
     summary: Fused or mechanical splice between optical fiber segments.
@@ -584,9 +581,9 @@ nodes:
       - name: splice_type
         type: str
         description: Splice type, such as fusion or mechanical.
-      - name: notes
+      - name: description
         type: str
-        description: Additional notes.
+        description: Free-text description.
   Terminator:
     label: Terminator
     summary: End condition of an optical path.
@@ -603,9 +600,9 @@ nodes:
       - name: termination_type
         type: str
         description: Termination type, such as open, capped, angled, or mirrored.
-      - name: notes
+      - name: description
         type: str
-        description: Additional notes.
+        description: Free-text description.
   Geo:
     label: Geometry
     display: Geometry
@@ -645,9 +642,9 @@ nodes:
       - name: depth
         type: float | None
         description: Depth in meters, positive down, relative to the local surface or deployment reference, when relevant.
-      - name: notes
+      - name: description
         type: str
-        description: Additional notes.
+        description: Free-text description.
   Ann:
     label: OpticalPathAnnotation
     display: Annotation
@@ -662,9 +659,9 @@ nodes:
       - name: label
         type: str
         description: Human-readable label for this path annotation.
-      - name: notes
+      - name: description
         type: str
-        description: Additional notes.
+        description: Free-text description.
 edges:
   - [Inv, Refs]
   - [Inv, Net]

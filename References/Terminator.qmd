@@ -15,7 +15,7 @@ End condition of an optical path.
 | `name` | str | Human-readable terminator name. |
 | `container` | [Enclosure](Enclosure.qmd) \| None | Optional enclosure housing this terminator. |
 | `termination_type` | str | Termination type, such as open, capped, angled, or mirrored. |
-| `notes` | str | Additional notes. |
+| `description` | str | Free-text description. |
 
 ## Contains
 

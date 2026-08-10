@@ -22,7 +22,7 @@ Station coordinates are interpreted using Inventory.coordinate_reference_system.
 | `coordinates` | tuple[float, ...] \| None | Representative station coordinates ordered according to Inventory.coordinate_reference_system.coordinate_labels. |
 | `<coordinate_label>` | float | Dynamic coordinate field named by CoordinateReferenceSystem.coordinate_labels, such as latitude, longitude, elevation, x, y, or z. |
 | `channels` | tuple[[Channel](Channel.qmd), ...] | Station channels associated with this station. |
-| `notes` | str | Additional notes. |
+| `description` | str | Free-text description. |
 
 ## Contains
 

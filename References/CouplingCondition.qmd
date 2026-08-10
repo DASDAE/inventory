@@ -23,7 +23,7 @@ Aliases: `Coup`, `Coupling`
 | `medium` | str | Surrounding medium, such as soil, rock, or steel. |
 | `attachment` | str | Attachment method, such as clamped or bonded. |
 | `depth` | float \| None | Depth in meters, positive down, relative to the local surface or deployment reference, when relevant. |
-| `notes` | str | Additional notes. |
+| `description` | str | Free-text description. |
 
 ## Contains
 

@@ -71,7 +71,7 @@ How rows map onto objects is a property of the attribute's type, and there are e
 Homogeneous tables need no discriminator:
 
 ```csv
-start_distance,end_distance,coupling_type,notes
+start_distance,end_distance,coupling_type,description
 0,340,conduit,
 340,355,trench,backfilled
 ```
@@ -110,7 +110,7 @@ An empty cell means unset, never an empty string. The one blank-meaningful code,
 
 ## Optical Path Epochs
 
-Each `path*/` directory under a fiber array is one `OpticalPath` epoch — an entity directory like any other: an `attrs.yaml` declaring `type: OpticalPath` (with `name`, OTDR references, and notes), plus its four track CSVs.
+Each `path*/` directory under a fiber array is one `OpticalPath` epoch — an entity directory like any other: an `attrs.yaml` declaring `type: OpticalPath` (with `name`, OTDR references, and a description), plus its four track CSVs.
 
 - The bare `path/` directory is the first epoch, starting when the fiber array starts.
 - Each later epoch is a sibling directory named `path@` plus its start time: `path@2024-05-12T103000/`.

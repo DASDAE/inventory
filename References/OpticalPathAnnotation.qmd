@@ -16,7 +16,7 @@ Aliases: `Ann`, `Annotation`
 | `start_distance` | float | Start optical distance of this annotation in meters. |
 | `end_distance` | float | End optical distance of this annotation in meters. |
 | `label` | str | Human-readable label for this path annotation. |
-| `notes` | str | Additional notes. |
+| `description` | str | Free-text description. |
 
 ## Contains
 

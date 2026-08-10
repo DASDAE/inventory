@@ -51,7 +51,7 @@ acquisition = fiber_array.acquisitions[0]
 
 corrected_acquisition = acquisition.new(
     sample_rate=500.0,
-    notes="Corrected from field log.",
+    description="Corrected from field log.",
 )
 
 inventory_v2 = inventory.replace(acquisition, corrected_acquisition)
@@ -71,7 +71,7 @@ kept, _ = opath.split_at(break_distance)
 new_opath = kept.new(
     start_time=break_time,
     end_time=None,
-    notes="Fiber break at 600 m; sensing continues on the near side.",
+    description="Fiber break at 600 m; sensing continues on the near side.",
 )
 
 new_fiber_array = fiber_array.new(

@@ -68,7 +68,7 @@ annotations:
   - start_distance: 1200.0
     end_distance: 1300.0
     label: slack coil
-    notes: Stored coil, not intended as sensing fiber.
+    description: Stored coil, not intended as sensing fiber.
 ```
 
 :::

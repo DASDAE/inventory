@@ -36,7 +36,7 @@ Coupling need not follow component or geometry boundaries: one fiber segment can
 
 ## Annotations
 
-`OpticalPathAnnotation` objects attach labels and notes to optical-distance intervals. They are useful for names, operational zones, quality flags, field observations, and analysis regions that should travel with the path but do not belong in geometry or coupling.
+`OpticalPathAnnotation` objects attach labels and descriptions to optical-distance intervals. They are useful for names, operational zones, quality flags, field observations, and analysis regions that should travel with the path but do not belong in geometry or coupling.
 
 Annotations cover `[start_distance, end_distance)`; equal start and end marks a labeled point.
 
