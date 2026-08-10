@@ -221,6 +221,12 @@ nodes:
       - name: interrogator_port
         type: str | None
         description: Instrument connector or launch port that fed this acquisition, for multiplexed interrogators. Descriptive only; it plays no role in resolution.
+      - name: firmware_version
+        type: str
+        description: Interrogator firmware version during this acquisition.
+      - name: software_version
+        type: str
+        description: Acquisition software version during this acquisition.
       - name: gauge_length
         type: float | None
         description: Gauge length used by the acquisition in meters.

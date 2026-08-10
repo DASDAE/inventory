@@ -87,7 +87,7 @@ acquisition = inv.Acquisition(
     gauge_length=2.0,
     spatial_interval=1.0,
     start_distance=0.0,
-    extra_fields={"software_version": "v0.2.1"},
+    software_version="v0.2.1",
 )
 ```
 

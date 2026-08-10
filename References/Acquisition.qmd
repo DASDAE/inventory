@@ -26,6 +26,8 @@ Aliases: `Acq`
 | `data_units` | UnitQuantity \| None | Units of data produced by this acquisition. |
 | `interrogator` | [Interrogator](Interrogator.qmd) \| None | Interrogator used for this acquisition. |
 | `interrogator_port` | str \| None | Instrument connector or launch port that fed this acquisition, for multiplexed interrogators. Descriptive only; it plays no role in resolution. |
+| `firmware_version` | str | Interrogator firmware version during this acquisition. |
+| `software_version` | str | Acquisition software version during this acquisition. |
 | `gauge_length` | float \| None | Gauge length used by the acquisition in meters. |
 | `pulse_rate` | float \| None | Pulse repetition rate in Hz. |
 | `pulse_width` | float \| None | Pulse width in seconds. |
