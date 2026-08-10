@@ -265,13 +265,10 @@ nodes:
         description: FDSN-style acquisition sample rate in Hz.
       - name: spatial_interval
         type: float | None
-        description: Nominal spatial sampling interval between channels in meters. Descriptive instrument metadata; it participates in channel resolution only as the affine slope, or as the slope of a single-point distance_map written on the channel axis.
-      - name: start_distance
-        type: float | None
-        description: Optical path distance corresponding to channel or index position 0. Mutually exclusive with distance_map.
+        description: Nominal spatial sampling interval between channels in meters. Descriptive instrument metadata; it participates in channel resolution only as the slope of a single-point distance_map read on the channel axis.
       - name: distance_map
         type: DistanceMap | None
-        description: Measured map from interrogator-reported channels or distances onto optical path distance. Mutually exclusive with start_distance.
+        description: Map from interrogator-reported channels or distances onto optical path distance; the acquisition's one channel-resolution mechanism.
       - name: closed_fiber_loop
         type: bool
         description: True when the interrogator is attached to both ends of the optical path.
@@ -283,7 +280,7 @@ nodes:
     display: Distance map
     style_class: instrument
     summary: Measured control-point map from an acquisition's channel-like coordinate onto optical path distance.
-    note: The map is a function, not a roster of existing channels. Values between control points are resolved by piecewise linear interpolation, and channels outside the covered range are undefined. Exactly one input axis is populated — channel when the interrogator reports channel numbers, instrument_distance when it reports its own nominal meters. A single-point map states an origin and takes its interpolation slope from the axis it is written in — the acquisition's nominal spatial_interval on the channel axis, and one meter of path per interrogator meter on the instrument_distance axis.
+    note: The map is a function, not a roster of existing channels. Values between control points are resolved by piecewise linear interpolation, and channels outside the covered range are undefined. It states one set of control points in whichever input coordinates were measured — channel when the interrogator reports channel numbers, instrument_distance when it reports its own nominal meters, or both when the same points are known in both, which lets one acquisition serve patches whose axes differ. A single-point map states an origin and takes its interpolation slope from the axis it is read on — the acquisition's nominal spatial_interval on the channel axis, and one meter of path per interrogator meter on the instrument_distance axis — and, unlike a multi-point map, it extrapolates beyond its control point.
     attributes:
       - name: channel
         type: tuple[float, ...] | None
