@@ -17,8 +17,9 @@ Aliases: `CRS`
 | `code` | str | Authority code or local project code. |
 | `name` | str | Human-readable CRS name. |
 | `coordinate_labels` | tuple[str, ...] | Coordinate labels and ordering, such as latitude, longitude, elevation or x, y, z. |
-| `units` | str | Coordinate units when known. |
+| `units` | tuple[str, ...] | Units of the canonical axes, in order; same length as coordinate_labels. |
 | `vertical_datum` | str | Vertical datum or reference surface, if known. |
+| `wkt` | str | WKT2 definition for frames an authority code cannot describe (local, derived, or compound CRSs); empty for registry CRSs. |
 
 ## Contains
 

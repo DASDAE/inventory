@@ -393,11 +393,14 @@ nodes:
         type: tuple[str, ...]
         description: Coordinate labels and ordering, such as latitude, longitude, elevation or x, y, z.
       - name: units
-        type: str
-        description: Coordinate units when known.
+        type: tuple[str, ...]
+        description: Units of the canonical axes, in order; same length as coordinate_labels.
       - name: vertical_datum
         type: str
         description: Vertical datum or reference surface, if known.
+      - name: wkt
+        type: str
+        description: WKT2 definition for frames an authority code cannot describe (local, derived, or compound CRSs); empty for registry CRSs.
   Ext:
     label: ExternalResource
     display: External resource
