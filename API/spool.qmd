@@ -78,7 +78,7 @@ Acquisition boundaries are stricter: a configuration change requires stopping an
 
 Subdivision reflects exactly what the path metadata says: a noisy geometry track can shatter what is conceptually one interval into several patches separated by small gaps. Apply `Spool.chunk` afterward to consolidate nearly-contiguous patches (`tolerance` parameter). `chunk` only merges patches with compatible attrs, so enriched fragments from different epochs will not rejoin; merging un-enriched fragments across a path epoch boundary is legal but will be re-subdivided at next resolution.
 
-`attach_inventory` includes a parameter called `enrich`, which is `True` by default. This means each extracted patch from the spool will automatically include the applicable attrs and coords derived from the inventory. The `attrs`, `coords`, and enrich-level `on_missing` keywords pass through `attach_inventory` to that automatic enrichment.
+`attach_inventory` includes a parameter called `enrich`, which is `True` by default. This means each extracted patch from the spool will automatically include the applicable attrs and coords derived from the inventory. The `attrs`, `coords`, `conflicts`, and enrich-level `on_missing` keywords pass through `attach_inventory` to that automatic enrichment.
 
 Another useful function is `Spool.split_by`. It expands the spool into one patch per value of an inventory-derived coordinate — most often an annotation group. Membership groups are allowed to overlap, so some channels may appear in more than one output patch, and the operation can greatly expand the number of patches. It simply raises if no inventory is attached.
 
@@ -108,7 +108,11 @@ patch = patch.enrich(inventory, coords=False)
 
 `Patch.enrich` is the single entry point for copying inventory metadata onto a patch — it resolves the full chain internally (`distance_map` or the affine map to optical distance, then the path tracks), and optical distance itself is requestable like any coord: `enrich(coords=("distance",))`. The `attrs` and `coords` keywords each accept `True` (all applicable), a tuple of names, or `False` to skip. It is the same operation `attach_inventory(enrich=True)` applies automatically to each patch extracted from the spool. The patch never retains a reference to the inventory; any operation that needs inventory context takes it as an explicit argument.
 
-`enrich` overwrites the fields it is asked to copy; re-enriching is a refresh, not an error. Its `on_missing` governs only explicitly requested names the inventory does not define — `"raise"` (default), `"nan"` (dtype-appropriate missing marker: NaN for floats, `None` for strings), or `"skip"` (omit silently). The blanket `attrs=True`/`coords=True` forms copy what is applicable and never trigger `on_missing`. Whole-patch resolution failures belong to the spool-level policy above.
+Blanket `attrs=True` copies observing-system facts only: the fields the inventory is authoritative for — `gauge_length`, `spatial_interval`, `interrogator.serial_number`, and the like — carried under their exact inventory spellings, with dotted names for nested facts. `data_type`, `data_category`, and `data_units` are excluded from the blanket form. They describe the data as it now stands rather than the system that recorded it, and processing functions maintain them (`velocity_to_strain_rate` rewrites `data_type`; most transforms rewrite `data_units`), so blanket enrichment of a processed patch would overwrite correct metadata with as-acquired values. Naming one explicitly (`attrs=("data_type",)`) still copies it, and means exactly what it says: restore the as-acquired value. The test that sorts the two cases is whether a patch function can legitimately change the field without the inventory being wrong. If it cannot, it is a system fact and belongs to blanket enrichment; if it can, it is data state and belongs to the patch.
+
+Disagreements are governed by `conflicts`, which takes the same values and behaves the same way as the flag `Spool.chunk` uses for conflicting attrs. Enrichment conceptually combines `[inventory_values, existing_values]`, so `"keep_first"` (the default) lets the inventory win, which makes re-enriching a refresh rather than an error; `"raise"` fails on genuine disagreement — both sides present and unequal — naming the attr and both values; and `"drop"` discards the disagreeing attrs instead of choosing between them. Filling an empty attr is never a conflict, and neither are equal values. `"raise"` is the misresolution guard: a file header whose `interrogator.serial_number` disagrees with the resolved acquisition's usually means the `data_source_id` resolved to the wrong place. It applies uniformly to every field rather than through per-field special cases, and is worth opting into when first attaching an inventory to an unfamiliar archive.
+
+`enrich`'s `on_missing` governs only explicitly requested names the inventory does not define — `"raise"` (default), `"nan"` (dtype-appropriate missing marker: NaN for floats, `None` for strings), or `"skip"` (omit silently). The blanket `attrs=True`/`coords=True` forms copy what is applicable and never trigger `on_missing`. Whole-patch resolution failures belong to the spool-level policy above.
 
 The patch resolves inventory context from its `data_source_id`, or from an explicit `data_source_id` passed to `enrich`. Because acquisition metadata is scalar per patch, `enrich` requires the patch to lie within a single acquisition and optical-path validity window and raises if it straddles a boundary — select or split the patch first.
 
@@ -122,6 +126,15 @@ patch = patch.enrich(
     coords=("x", "y", "z"),
 )
 ```
+
+### Kinds of Patch Attribute
+
+Enrichment is easier to reason about once patch attributes are sorted into kinds. Every attribute is exactly one of the following four, and the kind decides who writes it.
+
+- **The identity key.** `data_source_id` alone, holding `network.fiber_array.location.acquisition`. It flows patch → inventory as the resolution query, is set by whoever authored the patch (a reader, a hive path, the user), and enrichment never touches it.
+- **Observing-system facts.** Everything the inventory is authoritative for, flowing inventory → patch under the exact inventory spellings. Blanket enrichment fills these, governed by `conflicts`.
+- **Data state and patch-native bookkeeping.** `data_type`, `data_category`, and `data_units` describe the data as it now stands; `tag` and `history` are the patch's own record of itself. Readers and processing functions maintain both. Enrichment touches data state only when explicitly asked, and never touches `tag` or `history`.
+- **Storage provenance.** `source_path`, `source_format`, and `source_version` record where the bytes live, as opposed to where the signal came from. They belong to the spool and are read from `get_contents()` rather than from patch attrs — a convention rather than an enforced rule. The separation is deliberate: a patch merged from three files has one `data_source_id` and no single source path.
 
 ## Working with Archives
 Native files carry no network, fiber-array, location, or acquisition codes, and rewriting every file to embed them is costly and format-dependent. Instead, encode the metadata in the archive layout itself using [hive-style](https://arrow.apache.org/docs/python/dataset.html#partitioned-datasets-multiple-files) directory names. DASCore's file scanning parses any path segment of the form `key=value` as a string patch attribute applied to every file below it. Since paths are already stored in the spool index, this adds no scanning cost, and partition-aware tools such as PyArrow, DuckDB, and polars can query the same layout directly without DASCore in the loop (assuming they know how to read the files in question).
@@ -164,11 +177,11 @@ For flatter archives, the four component keys can be collapsed into a single com
     └── <span class="tree-file tree-file-data">2024-05-01_010000.h5</span></code></pre>
 :::
 
-Generic `key=value` parsing sets `data_source_id` directly — no special machinery. It is also branch-agnostic: the second token may name a fiber array or a station, and the resolver distinguishes them through the disjoint code namespaces. DASCore derives the four component attrs from the composite at scan time, so plain selections such as `spool.select(network="DAS")` work on either layout.
+Generic `key=value` parsing sets `data_source_id` directly — no special machinery. It is also branch-agnostic: the second token may name a fiber array or a station, and the resolver distinguishes them through the disjoint code namespaces. In the component layout DASCore joins the four segments into `data_source_id` at scan time, so both layouts produce the same single identity attr, and component-level queries are wildcard matches against it: `spool.select(data_source_id="DAS.*")`.
 
 A few rules keep the scheme predictable:
 
-- All four `data_source_id` parts must be present for inventory resolution. Partial keys are legal at the scanning layer and remain useful as plain attrs for `spool.select`, but missing parts are never guessed or defaulted; patches without a complete `data_source_id` have no valid inventory entry.
+- All four `data_source_id` parts must be present for inventory resolution. Partial keys are legal at the scanning layer and remain readable as plain string attrs, but missing parts are never guessed or defaulted; patches without a complete `data_source_id` have no valid inventory entry.
 - Path-derived attributes are always strings. Anything richer belongs in the inventory.
 - Path segments fill attributes the file does not define; they never override. If a file-embedded attribute disagrees with a path segment, scanning raises rather than applying precedence — the same treatment as composite/component disagreement below. The raise typically indicates a file moved into the wrong directory.
 - Merged or derived products have no single ancestor, so there is nothing true to assert with provenance keys; store them under plain directories (path segments without `key=value` assert nothing), where their file-embedded attributes — including a cleared `data_source_id` — stand as written.
