@@ -21,6 +21,10 @@ Channel coordinates are interpreted using Inventory.coordinate_reference_system.
 | `end_time` | datetime64 \| None | End time for which this channel metadata is valid; None while ongoing. |
 | `coordinates` | tuple[float, ...] \| None | Channel coordinates ordered according to Inventory.coordinate_reference_system.coordinate_labels. |
 | `<coordinate_label>` | float | Dynamic coordinate field named by CoordinateReferenceSystem.coordinate_labels, such as latitude, longitude, elevation, x, y, or z. |
+| `sample_rate` | float \| None | Sample rate in Hz. |
+| `azimuth` | float \| None | Sensor component azimuth in degrees clockwise from north, [0, 360). |
+| `dip` | float \| None | Sensor component dip in degrees down from horizontal, [-90, 90]. |
+| `depth` | float \| None | Sensor depth in meters below the local surface; positive down. |
 | `data_type` | Literal[VALID_DATA_TYPES] | Quantity measured or produced by this channel. |
 | `data_units` | UnitQuantity \| None | Units of data produced by this channel. |
 | `response` | [Response](Response.qmd) \| None | Optional station-specific response metadata for converting recorded values to physical units. |

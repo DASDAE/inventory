@@ -15,6 +15,8 @@ Aliases: `Net`
 |---|---|---|
 | `code` | str | Network code. |
 | `name` | str | Human-readable network name. |
+| `start_time` | datetime64 | Start time for which this network metadata is valid. |
+| `end_time` | datetime64 \| None | End time for which this network metadata is valid; None while ongoing. |
 | `fiber_arrays` | tuple[[FiberArray](FiberArray.qmd), ...] | Fiber arrays associated directly with this network. |
 | `stations` | tuple[[Station](Station.qmd), ...] | Station-level observing identities associated with this network. |
 | `description` | str | Free-text description. |

@@ -66,6 +66,12 @@ nodes:
       - name: name
         type: str
         description: Human-readable network name.
+      - name: start_time
+        type: datetime64
+        description: Start time for which this network metadata is valid.
+      - name: end_time
+        type: datetime64 | None
+        description: End time for which this network metadata is valid; None while ongoing.
       - name: fiber_arrays
         type: tuple[FiberArray, ...]
         description: Fiber arrays associated directly with this network.
@@ -130,6 +136,18 @@ nodes:
       - name: "<coordinate_label>"
         type: float
         description: Dynamic coordinate field named by CoordinateReferenceSystem.coordinate_labels, such as latitude, longitude, elevation, x, y, or z.
+      - name: sample_rate
+        type: float | None
+        description: Sample rate in Hz.
+      - name: azimuth
+        type: float | None
+        description: Sensor component azimuth in degrees clockwise from north, [0, 360).
+      - name: dip
+        type: float | None
+        description: Sensor component dip in degrees down from horizontal, [-90, 90].
+      - name: depth
+        type: float | None
+        description: Sensor depth in meters below the local surface; positive down.
       - name: data_type
         type: Literal[VALID_DATA_TYPES]
         description: Quantity measured or produced by this channel.
