@@ -9,32 +9,43 @@ In the proposed workflow, DASCore's `Spool` acts as a bridge between stored patc
 
 ### Spool operations
 
-The inventory can be directly attached to a spool, in which case it acts as a metadata-fallback for patch operations. 
+::: {.callout-note}
+Of what this page describes, `attach_inventory`, `enrich`, and `remove_inventory` are implemented. `prune_to_inventory`, inventory-backed `select`/`unselect`, and `split_by` are proposed, so the code blocks below are the intended API rather than one that runs today.
+:::
+
+An inventory can be attached to a spool, which then carries it as context for the operations that want one. Attaching is deliberately inert: it costs nothing per patch and adds nothing to what the spool's patches carry. It does clear enrichment already set up, because swapping the source underneath a configured enrichment would silently rewrite every patch's metadata; the new one has to be asked for. Three methods do the work. `enrich` copies inventory metadata onto each patch as it is extracted, `prune_to_inventory` resolves the index against the inventory and keeps only what the inventory describes, and `remove_inventory` drops the inventory along with any enrichment set up from it. `enrich` and `prune_to_inventory` each take an inventory directly, defaulting to the attached one, so attaching is a convenience rather than a required first step.
 
 ```python
 import dascore as dc
 
 inventory = dc.inventory("inventory.yaml")
 
-# Attaching resolves every indexed patch against the inventory and
-# updates the index to match; unresolvable patches raise by default.
+# Attaching is cheap: the spool carries the inventory and nothing more.
 spool = dc.spool("/data/archive").attach_inventory(inventory)
-
 
 raw = (
     spool
+    # Resolve the index against the inventory: drop the patches it does
+    # not describe, and subdivide those straddling an epoch boundary.
+    .prune_to_inventory()
     # Get rid of channels with undefined coupling
     .unselect(coupling=None)
     # Coordinate selection from corresponding coordinates
     .select(latitude=(45, 50), elevation=(100, 250))
+    # Each patch now arrives with its inventory metadata attached.
+    .enrich()
 )
 
 patch = raw[0]
 ```
 
-`attach_inventory` applies an `on_missing` policy to patches that resolve to no inventory entry — a `data_source_id` the inventory does not contain, or a time outside every matching epoch. The default is `"raise"`, which fails immediately and names the unmatched IDs; `"warn"` drops them but reports what was dropped; `"drop"` discards them silently, the right choice only when the inventory intentionally covers a subset of a larger archive. This spool-level policy governs whole patches failing to resolve; per-channel gaps such as uncovered geometry remain governed by the partial-coverage semantics — missing values, never errors.
+Keeping the three apart matters because they cost very different things. Attaching is free. Pruning is a one-time pass over metadata, expensive on a large archive but paid once. Enrichment is per-patch work paid on every extraction — resolving the context, then building a coordinate per projected track — so a spool that is only being selected on, or whose patches are consumed for their data alone, should not pay it. That is why enrichment is something asked for rather than something attaching implies.
 
-Resolution and epoch boundaries are pure metadata, so attaching filters and subdivides the spool's dataframe: `len(spool)` and `get_contents()` reflect exactly what iteration will yield, and only data materializes lazily on extraction. On large archives this makes `attach_inventory` a costly one-time operation.
+`prune_to_inventory` applies an `on_missing` policy to patches that resolve to no inventory entry — a `data_source_id` the inventory does not contain, or a time outside every matching epoch. The default is `"raise"`, which fails immediately and names the unmatched IDs; `"warn"` drops them but reports what was dropped; `"drop"` discards them silently, the right choice only when the inventory intentionally covers a subset of a larger archive. This spool-level policy governs whole patches failing to resolve; per-channel gaps such as uncovered geometry remain governed by the partial-coverage semantics — missing values, never errors.
+
+Resolution and epoch boundaries are pure metadata, so pruning filters and subdivides the spool's dataframe: `len(spool)` and `get_contents()` reflect exactly what iteration will yield, and only data materializes lazily on extraction.
+
+A spool combined with another (`+`) keeps an inventory attached to either operand, and likewise the enrichment set up from it; the two carry over independently, so attaching the same inventory to the other operand cannot turn a working union into an error. Two operands answering either question differently have no combined meaning and raise; attach to the combined spool instead. What carries over then applies to *every* patch in the result, including those the other operand contributed, so combining an enriched spool with patches the inventory does not describe produces a spool that raises when those patches are extracted. Prune first, or enrich after combining.
 
 ### Selecting On Inventory Metadata
 
@@ -74,11 +85,11 @@ Group names are therefore subject to collision rules: a group named after a stru
 
 Inventory-backed `select` and `unselect` operate on channels, not whole patches. Contents are trimmed to the matching channels, and when the matching region is disjoint along the fiber — a path that passes in and out of the selected coordinate range, or an undefined-coupling zone in the middle of a path — the patch is subdivided so that each contiguous matching interval becomes its own patch. Selection can therefore change both the shape and the number of patches in the spool. Optical-path validity edges work the same way along time: a fiber can break mid-recording, so a patch straddling a path epoch boundary appears in the index as its pieces, each resolving cleanly to its own window, and the data is split when extracted. `Spool.split_by` (below) applies the same subdivision mechanism to any inventory-derived coordinate.
 
-Acquisition boundaries are stricter: a configuration change requires stopping and restarting the acquisition, so no valid file spans one. On a straddling file `attach_inventory` raises, naming the file and the boundary; the usual fix is a correction — set the epoch time to the file boundary, the instrument's own record of the restart.
+Acquisition boundaries are stricter: a configuration change requires stopping and restarting the acquisition, so no valid file spans one. On a straddling file `prune_to_inventory` raises, naming the file and the boundary; the usual fix is a correction — set the epoch time to the file boundary, the instrument's own record of the restart.
 
-Subdivision reflects exactly what the path metadata says: a noisy geometry track can shatter what is conceptually one interval into several patches separated by small gaps. Apply `Spool.chunk` afterward to consolidate nearly-contiguous patches (`tolerance` parameter). `chunk` only merges patches with compatible attrs, so enriched fragments from different epochs will not rejoin; merging un-enriched fragments across a path epoch boundary is legal but will be re-subdivided at next resolution.
+Subdivision reflects exactly what the path metadata says: a noisy geometry track can shatter what is conceptually one interval into several patches separated by small gaps. Apply `Spool.chunk` afterward to consolidate nearly-contiguous patches (`tolerance` parameter). `chunk` merges on indexed attrs, and enrichment happens after merging rather than before — a spool enriches each patch as it is extracted, so the merge never sees inventory metadata and cannot use it to keep fragments apart. Keeping fragments from different epochs separate is therefore the subdivision's job, not enrichment's: merging across a path epoch boundary is legal and will be re-subdivided at the next resolution.
 
-`attach_inventory` includes a parameter called `enrich`, which is `True` by default. This means each extracted patch from the spool will automatically include the applicable attrs and coords derived from the inventory. The `attrs`, `coords`, `conflicts`, and enrich-level `on_missing` keywords pass through `attach_inventory` to that automatic enrichment.
+`Spool.enrich` sets up the same operation `Patch.enrich` performs, applied to each patch as it is extracted: `spool.enrich()` uses the attached inventory, `spool.enrich(inventory)` attaches and uses the one it is given, and every `Patch.enrich` keyword passes straight through. Nothing is computed at the call itself; the argument *names* are checked and the arguments held, with their values checked by each patch's own enrichment. Calling it again replaces the arguments rather than adding to them. Enrichment survives `select`, `sort`, and `chunk` — a derived spool is the same data — and `remove_inventory` or attaching a different inventory ends it.
 
 Another useful function is `Spool.split_by`. It expands the spool into one patch per value of an inventory-derived coordinate — most often an annotation group. Membership groups are allowed to overlap, so some channels may appear in more than one output patch, and the operation can greatly expand the number of patches. It simply raises if no inventory is attached.
 
@@ -106,7 +117,7 @@ patch = patch.enrich(
 patch = patch.enrich(inventory, coords=False)
 ```
 
-`Patch.enrich` is the single entry point for copying inventory metadata onto a patch — it resolves the full chain internally (the acquisition's `distance_map` to optical distance, then the path tracks), and optical distance itself is requestable like any coord: `enrich(coords=("distance",))`. The `attrs` and `coords` keywords each accept `True` (all applicable), a tuple of names, or `False` to skip. It is the same operation `attach_inventory(enrich=True)` applies automatically to each patch extracted from the spool. The patch never retains a reference to the inventory; any operation that needs inventory context takes it as an explicit argument.
+`Patch.enrich` is the single entry point for copying inventory metadata onto a patch — it resolves the full chain internally (the acquisition's `distance_map` to optical distance, then the path tracks), and optical distance itself is requestable like any coord: `enrich(coords=("distance",))`. The `attrs` and `coords` keywords each accept `True` (all applicable), a tuple of names, or `False` to skip. It is the same operation `Spool.enrich` applies to each patch extracted from the spool. The patch never retains a reference to the inventory; any operation that needs inventory context takes it as an explicit argument.
 
 Blanket `attrs=True` copies observing-system facts only: the fields the inventory is authoritative for — `gauge_length`, `pulse_width`, `interrogator.serial_number`, and the like — carried under their exact inventory spellings, with dotted names for nested facts. Excluded from the blanket form are `data_type`, `data_category`, and `data_units`, which describe the data as it now stands rather than the system that recorded it, and `sample_rate` and `spatial_interval`, which the patch's own coordinates already state — nothing should be redundant between coordinates and attrs, and decimating changes both, so restoring the as-acquired values would contradict the coordinates they duplicate. Naming any of them explicitly (`attrs=("data_type",)`) still copies it, and means exactly what it says: restore the as-acquired value. The test that sorts the two cases is whether a patch function can legitimately change the field without the inventory being wrong. If it cannot, it is a system fact and belongs to blanket enrichment; if it can, the patch is the authority and enrichment waits to be asked.
 
