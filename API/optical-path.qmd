@@ -32,7 +32,7 @@ path.validate()
 
 ## Patch Projection
 
-`Patch.enrich` resolves the valid optical path from the patch `data_source_id` and patch time, mapping channels to optical distance internally (via the acquisition's `distance_map`) before projecting the path tracks:
+`Patch.enrich` resolves the valid optical path from the patch `acquisition_key` and patch time, mapping channels to optical distance internally (via the acquisition's `distance_map`) before projecting the path tracks:
 
 ```python
 patch = patch.enrich(

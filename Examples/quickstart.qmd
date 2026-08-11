@@ -95,7 +95,7 @@ import dascore as dc
 patch = dc.spool("das_data/")[0]
 patch = patch.enrich(
     inventory,
-    data_source_id="DAS.L001.00.RAW",
+    acquisition_key="DAS.L001.00.RAW",
     coords=("latitude", "longitude", "elevation"),
 )
 ```

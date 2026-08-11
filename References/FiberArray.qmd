@@ -13,7 +13,7 @@ Aliases: `FA`
 
 | Name | Type | Description |
 |---|---|---|
-| `code` | str | Station-like fiber array code used in data_source_id. |
+| `code` | str | Station-like fiber array code used in acquisition_key. |
 | `name` | str | Human-readable fiber array name. |
 | `start_time` | datetime64 | Start time for which this metadata item is valid. |
 | `end_time` | datetime64 \| None | End time for which this metadata item is valid; None while ongoing. |

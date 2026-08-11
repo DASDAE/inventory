@@ -17,7 +17,7 @@ Aliases: `Acq`
 
 | Name | Type | Description |
 |---|---|---|
-| `code` | str | Channel-like acquisition code used in data_source_id. |
+| `code` | str | Channel-like acquisition code used in acquisition_key. |
 | `location_code` | str | FDSN-style location code naming the optical path lineage this acquisition interrogates; may be blank, as in FDSN. |
 | `start_time` | datetime64 | Start time for which this acquisition is valid. |
 | `end_time` | datetime64 \| None | End time for which this acquisition is valid; None while ongoing. |

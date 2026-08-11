@@ -102,7 +102,7 @@ optdas_2 = inv.Interrogator(
 
 ### Acquisitions
 
-Each arm is its own fiber array in this example, so each arm carries its own acquisition streams. Acquisition codes only need to be unique within a fiber array, so the same three codes recur on every arm — `NO.NFXA..FEBUS` and `NO.NFXB..FEBUS` are distinct `data_source_id`s. Wavelength-specific settings can be added later if they are needed for an analysis, but they are not required for the structural inventory.
+Each arm is its own fiber array in this example, so each arm carries its own acquisition streams. Acquisition codes only need to be unique within a fiber array, so the same three codes recur on every arm — `NO.NFXA..FEBUS` and `NO.NFXB..FEBUS` are distinct `acquisition_key`s. Wavelength-specific settings can be added later if they are needed for an analysis, but they are not required for the structural inventory.
 
 ```python
 common_acquisition_fields = dict(

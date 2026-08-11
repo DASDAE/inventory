@@ -189,7 +189,7 @@ nodes:
     attributes:
       - name: code
         type: str
-        description: Station-like fiber array code used in data_source_id.
+        description: Station-like fiber array code used in acquisition_key.
       - name: name
         type: str
         description: Human-readable fiber array name.
@@ -220,7 +220,7 @@ nodes:
     attributes:
       - name: code
         type: str
-        description: Channel-like acquisition code used in data_source_id.
+        description: Channel-like acquisition code used in acquisition_key.
       - name: location_code
         type: str
         description: FDSN-style location code naming the optical path lineage this acquisition interrogates; may be blank, as in FDSN.

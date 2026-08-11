@@ -41,7 +41,7 @@ The authoring format splits the inventory along its natural grain: long, row-sha
 The hierarchy is never built by nesting; it materializes from names, following the same convention as [hive-style archives](spool.qmd#working-with-archives):
 
 - A fiber array's name is its address: `DAS.L001/` (or `DAS.L001.yaml`, for an array with no row-shaped tracks yet) places array `L001` in network `DAS`. When the code is reused across epochs, the same `@` convention as everywhere else applies: `DAS.L001@2024-03-01/`.
-- An acquisition filename is its dotted `data_source_id`: `DAS.L001.01.RAW.yaml`. When two epochs of the same acquisition would collide, the later file appends `@` and its start time: `DAS.L001.01.RAW@2024-06-01.yaml`. The suffix is a restated address: it must agree exactly with the in-file `start_time` (a date-only suffix means midnight UTC) or loading raises.
+- An acquisition filename is its dotted `acquisition_key`: `DAS.L001.01.RAW.yaml`. When two epochs of the same acquisition would collide, the later file appends `@` and its start time: `DAS.L001.01.RAW@2024-06-01.yaml`. The suffix is a restated address: it must agree exactly with the in-file `start_time` (a date-only suffix means midnight UTC) or loading raises.
 - A resource filename is its `resource_id`: `cable_01.yaml`.
 - `networks/` is optional — only needed when the network itself has metadata worth recording. Networks mentioned by other addresses exist regardless.
 

@@ -39,7 +39,7 @@ inventory = dc.Inventory(networks=(inv.Network(
 ),))
 ```
 
-This inventory resolves patches with `data_source_id` `DAS.L001.01.RAW`, providing acquisition values such as `sample_rate`, instrument values such as `interrogator.model`, and optical path context such as geometry, coupling, annotations, and optical components. `FiberArray` identifies the durable observing system; acquisition settings and path interpretation change without changing it.
+This inventory resolves patches with `acquisition_key` `DAS.L001.01.RAW`, providing acquisition values such as `sample_rate`, instrument values such as `interrogator.model`, and optical path context such as geometry, coupling, annotations, and optical components. `FiberArray` identifies the durable observing system; acquisition settings and path interpretation change without changing it.
 
 
 ## Updating an Inventory Component
@@ -96,10 +96,10 @@ inventory_v2 = inventory.register_fiber_break(
 
 ## Patch Resolution
 
-Patch enrichment starts from `data_source_id` ([resolution rules](../Model/model.qmd#model-constraints)):
+Patch enrichment starts from `acquisition_key` ([resolution rules](../Model/model.qmd#model-constraints)):
 
 ```python
-patch = patch.update_attrs(data_source_id="DAS.L001.01.RAW")
+patch = patch.update_attrs(acquisition_key="DAS.L001.01.RAW")
 
 patch = patch.enrich(
     inventory,

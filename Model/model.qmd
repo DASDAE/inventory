@@ -34,7 +34,7 @@ The acquisition code is similar to the channel code from StationXML. The model c
 
 ## Linking Patches to Acquisitions
 
-Patches (time-series data) do not directly embed the inventory. They carry a `data_source_id` composed of:
+Patches (time-series data) do not directly embed the inventory. They carry a `acquisition_key` composed of:
 
 ```text
 network.fiber_array.location.acquisition
@@ -42,9 +42,9 @@ network.fiber_array.location.acquisition
 
 That identifier resolves to the relevant `FiberArray` and `Acquisition` for a patch time. Likewise, channels in StationXML are resolved using `network.station.location.channel`. This makes a patch portable and keeps large or revised inventory context outside the patch until a user explicitly asks to add it.
 
-`data_source_id` records provenance, not identity. It names the observing configuration that produced the samples and is never unique to a patch: every window, selection, or split from the same acquisition shares one. No patch operation modifies `data_source_id`; it is only set when resolved from an archive layout or explicitly assigned by the user. Combining patches with different `data_source_id`s yields a patch with no single ancestor, so the field is cleared rather than silently inheriting one value.
+`acquisition_key` records provenance, not identity. It names the observing configuration that produced the samples and is never unique to a patch: every window, selection, or split from the same acquisition shares one. No patch operation modifies `acquisition_key`; it is only set when resolved from an archive layout or explicitly assigned by the user. Combining patches with different `acquisition_key`s yields a patch with no single ancestor, so the field is cleared rather than silently inheriting one value.
 
-Codes plus time are the only resolution mechanism, mirroring how SEED/FDSN identifiers resolve against StationXML epochs: the same `data_source_id` legitimately spans many acquisition epochs, and a time selects among them. Patches whose time axis is no longer physical (e.g., correlations with lag time) resolve by passing an explicit `time` argument to resolution methods. The model stores no surrogate epoch identifier; one is derivable as codes plus epoch start time (`DAS.L001.01.RAW@2024-05-01T000000`, ISO basic — filename- and hive-safe). The name follows the FDSN Source Identifier vocabulary; the `data_` prefix distinguishes it from a seismic source.
+Codes plus time are the only resolution mechanism, mirroring how SEED/FDSN identifiers resolve against StationXML epochs: the same `acquisition_key` legitimately spans many acquisition epochs, and a time selects among them. Patches whose time axis is no longer physical (e.g., correlations with lag time) resolve by passing an explicit `time` argument to resolution methods. The model stores no surrogate epoch identifier; one is derivable as codes plus epoch start time (`DAS.L001.01.RAW@2024-05-01T000000`, ISO basic — filename- and hive-safe). The name follows the FDSN Source Identifier vocabulary; the `data_` prefix distinguishes it from a seismic source.
 
 Epochs and corrections are distinct operations with distinct rules. Epochs record changes in the world — an instrument swap, a configuration change, a fiber break — and are additive: close one epoch, open the next. Corrections record changes in our knowledge — a re-tap-test revealing the channel map was always wrong, a re-survey improving coordinates — and are in-place edits to the inventory document, applying retroactively to all data the epoch covers. This mirrors StationXML practice, where a wrong sensitivity is fixed by republishing metadata, not by minting a new channel epoch.
 
@@ -61,9 +61,9 @@ These do not need to be added to native DAS files directly but can be encoded in
 - Within a `Network`, `Station` and `FiberArray` codes are disjoint for overlapping time ranges.
 - Station codes must be unique within a `Network` for overlapping time ranges; Channel `(location_code, code)` pairs must be unique within a `Station` for overlapping time ranges and resolve to exactly one `Channel` at any instant.
 - Resource IDs must be unique across shareable resources. Resource IDs are a separate namespace from codes and may use `_`.
-- All codes used in `data_source_id` are restricted to letters, digits, and `-`; `.` is reserved as the separator and `_` is excluded (it is the FDSN Source Identifier separator).
+- All codes used in `acquisition_key` are restricted to letters, digits, and `-`; `.` is reserved as the separator and `_` is excluded (it is the FDSN Source Identifier separator).
 - Codes are non-empty, except `location_code`, which may be blank as in FDSN; a blank location appears as an empty token in dotted identifiers (`DAS.L001..RAW`).
-- `data_source_id` parts must resolve to exactly one `Network`, `FiberArray`, `OpticalPath` (selected by the location code), and `Acquisition` at any given instant; a patch is resolvable as a whole only when every instant it spans resolves to the same acquisition.
+- `acquisition_key` parts must resolve to exactly one `Network`, `FiberArray`, `OpticalPath` (selected by the location code), and `Acquisition` at any given instant; a patch is resolvable as a whole only when every instant it spans resolves to the same acquisition.
 - Acquisition `(location_code, code)` pairs must be unique within a `FiberArray` for overlapping time ranges.
 - A `distance_map` states at least one input axis, and every axis it states has one value per control point: they are the same points in different coordinates. A patch carrying more than one of those coordinates must agree with the map about all of them, or it contradicts the map about its own channels.
 - No recorded file spans an acquisition epoch boundary: a configuration change stops and restarts the acquisition. A straddling file indicates an incorrect epoch time, and the file boundary is the ground truth for correcting it. Optical-path epochs carry no such guarantee — a fiber can break mid-recording.
