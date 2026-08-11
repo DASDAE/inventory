@@ -45,7 +45,7 @@ Keeping the three apart matters because they cost very different things. Attachi
 
 A patch resolves to no inventory entry when it carries no `acquisition_key`, when it carries one the inventory does not contain, or when its time falls outside every matching epoch. Both `prune_to_inventory` and `enrich` have to say what happens then, and they answer differently because they are different verbs: pruning decides *membership*, enrichment decides *metadata*.
 
-`prune_to_inventory` applies an `on_missing` policy: `"raise"` (the default) fails immediately and names the unmatched IDs, `"warn"` drops them but reports what was dropped, and `"drop"` discards them silently — the right choice only when the inventory intentionally covers a subset of a larger archive.
+`prune_to_inventory` applies an `on_missing` policy: `"raise"` (the default) fails immediately and names the unmatched keys, `"warn"` drops them but reports what was dropped, and `"drop"` discards them silently — the right choice only when the inventory intentionally covers a subset of a larger archive.
 
 `enrich` never drops a patch. A patch it cannot resolve comes out unchanged rather than missing, under an `on_unresolved` policy of `"warn"` (the default), `"raise"`, or `"ignore"` for silence. Removing rows is pruning's job, and keeping it there is what lets enrichment stay lazy: nothing is resolved when `enrich` is called, so `len(spool)` and `get_contents()` keep their meaning and the cost stays proportional to the patches actually extracted. An archive an inventory partly covers therefore works without a prune — `spool.enrich(inventory)` enriches what it can and says what it could not — and `spool.prune_to_inventory().enrich()` is how to have both. The policy needs its own name because `on_missing` is already spent on `Patch.enrich`, where it governs a requested *name* the inventory does not define; `on_unresolved` governs a whole patch the inventory does not describe.
 
@@ -183,7 +183,7 @@ An archive laid out this way might look like:
     └── <span class="tree-file tree-file-table">tap_tests.csv</span></code></pre>
 :::
 
-Files under `network=DAS/fiber_array=R2D1/location=01/acquisition=HHZ/` resolve to the data source ID `DAS.R2D1.01.HHZ`, making it simple to "bolt on" a DASDAE inventory to virtually any DFOS data archive that can be reorganized (or symlinked) into this layout.
+Files under `network=DAS/fiber_array=R2D1/location=01/acquisition=HHZ/` resolve to the acquisition key `DAS.R2D1.01.HHZ`, making it simple to "bolt on" a DASDAE inventory to virtually any DFOS data archive that can be reorganized (or symlinked) into this layout.
 
 For flatter archives, the four component keys can be collapsed into a single composite segment whose key is exactly the attr name:
 
