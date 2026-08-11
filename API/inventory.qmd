@@ -105,7 +105,7 @@ patch = patch.enrich(
     inventory,
     attrs=("sample_rate", "gauge_length", "interrogator.model"),
     coords=("distance", "zone", "latitude", "longitude", "elevation"),
-    on_missing="nan",
+    on_missing="null",
 )
 ```
 

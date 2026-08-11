@@ -38,7 +38,7 @@ path.check()
 patch = patch.enrich(
     inventory,
     coords=("distance", "rock_type", "x", "y", "z", "optical_components.name"),
-    on_missing="nan",
+    on_missing="null",
 )
 ```
 

@@ -120,7 +120,7 @@ patch = patch.enrich(
     inventory,
     attrs=("sample_rate", "gauge_length", "interrogator.model"),
     coords=("x", "y", "z"),
-    on_missing="nan",
+    on_missing="null",
 )
 
 # Enrich with attrs only
@@ -133,11 +133,9 @@ Blanket `attrs=True` copies observing-system facts only: the fields the inventor
 
 Disagreements are governed by `conflicts`, which takes the same values and behaves the same way as the flag `Spool.chunk` uses for conflicting attrs. Enrichment conceptually combines `[inventory_values, existing_values]`, so `"keep_first"` (the default) lets the inventory win, which makes re-enriching a refresh rather than an error; `"raise"` fails on genuine disagreement — both sides present and unequal — naming the attr and both values; and `"drop"` discards the disagreeing attrs instead of choosing between them. Filling an empty attr is never a conflict, and neither are equal values. `"raise"` is the misresolution guard: a file header whose `interrogator.serial_number` disagrees with the resolved acquisition's usually means the `acquisition_key` resolved to the wrong place. It applies uniformly to every field rather than through per-field special cases, and is worth opting into when first attaching an inventory to an unfamiliar archive.
 
-`enrich`'s `on_missing` governs only explicitly requested names the inventory does not define — `"raise"` (default), `"nan"` (dtype-appropriate missing marker: NaN for floats, `None` for strings), or `"skip"` (omit silently). The blanket `attrs=True`/`coords=True` forms copy what is applicable and never trigger `on_missing`. Whole-patch resolution failures belong to the spool-level policy above.
+`enrich`'s `on_missing` governs only explicitly requested names the inventory does not define — `"raise"` (default), `"null"` (the dtype-appropriate missing marker: NaN for floats, `None` for strings), or `"skip"` (omit silently). The blanket `attrs=True`/`coords=True` forms copy what is applicable and never trigger `on_missing`. Whole-patch resolution failures belong to the spool-level policy above.
 
-Three policy vocabularies coexist here on purpose. `on_unresolved` and DASCore's `WARN_LEVELS` are a *volume* axis: their members take the same action and differ only in whether they announce it. `on_missing` is a *result* axis: `"raise"` fails, `"nan"` fills a marker, and `"skip"` leaves the name off — three outcomes rather than three loudness settings. That is why `"skip"` is not spelled `"ignore"`: `ignore` elsewhere means proceed quietly, not produce a different result, and reusing it would make one word mean both. `conflicts` keeps chunking's `"keep_first"`/`"raise"`/`"drop"` because matching that flag is worth more than internal tidiness. Only `raise` means the same thing in every one of them, which is the reconciliation available without flattening real distinctions.
-
-One name is still under review: `"nan"` fills NaN for floats but `None` for strings, so it misdescribes half the cases it covers. `"null"` or `"missing"` would be true across dtypes.
+Three policy vocabularies coexist here on purpose. `on_unresolved` and DASCore's `WARN_LEVELS` are a *volume* axis: their members take the same action and differ only in whether they announce it. `on_missing` is a *result* axis: `"raise"` fails, `"null"` fills a marker, and `"skip"` leaves the name off — three outcomes rather than three loudness settings. That is why `"skip"` is not spelled `"ignore"`: `ignore` elsewhere means proceed quietly, not produce a different result, and reusing it would make one word mean both. `conflicts` keeps chunking's `"keep_first"`/`"raise"`/`"drop"` because matching that flag is worth more than internal tidiness. Only `raise` means the same thing in every one of them, which is the reconciliation available without flattening real distinctions.
 
 The patch resolves inventory context from its `acquisition_key`, or from an explicit `acquisition_key` passed to `enrich`. Because acquisition metadata is scalar per patch, `enrich` requires the patch to lie within a single acquisition and optical-path validity window and raises if it straddles a boundary — select or split the patch first.
 
