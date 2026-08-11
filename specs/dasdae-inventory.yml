@@ -327,18 +327,12 @@ nodes:
       - name: name
         type: str
         description: Human-readable cable name.
-      - name: owner
-        type: str
-        description: Proprietary owner of the cable.
       - name: manufacturer
         type: str
         description: Manufacturer of the cable.
       - name: model
         type: str
         description: Model name of the cable.
-      - name: serial_number
-        type: str
-        description: Manufacturer serial number for the cable.
       - name: diameter
         type: float | None
         description: Outer cable diameter in meters.
@@ -368,9 +362,6 @@ nodes:
       - name: enclosure_type
         type: str
         description: Functional enclosure type, such as splice_box, junction_box, coupler, turnaround, patch_panel, protective_housing, conduit, pipe, duct, casing, borehole, or tray.
-      - name: owner
-        type: str
-        description: Proprietary owner of the enclosure.
       - name: material
         type: str
         description: Enclosure material, such as steel, PVC, HDPE, concrete, or rock.
@@ -380,15 +371,9 @@ nodes:
       - name: model
         type: str
         description: Model name of the enclosure.
-      - name: serial_number
-        type: str
-        description: Manufacturer serial number for the enclosure.
       - name: inner_diameter
         type: float | None
         description: Inner diameter in meters, when known.
-      - name: outer_diameter
-        type: float | None
-        description: Outer diameter in meters, when known.
       - name: specification
         type: ExternalResource | None
         description: External enclosure specification, datasheet, drawing, or product page.
@@ -574,6 +559,18 @@ nodes:
       - name: description
         type: str
         description: Free-text description.
+      - name: loss_db
+        type: float | tuple[float, ...] | None
+        description: One-way transmission loss across this component in dB; multi-wavelength values are equal-length tuples paired with loss_measurement.
+      - name: loss_measurement
+        type: OpticalMeasurement | tuple[OpticalMeasurement, ...] | None
+        description: Measurement record(s) the loss value(s) came from; the record carries the wavelength and instrument settings.
+      - name: reflectance_db
+        type: float | tuple[float, ...] | None
+        description: Return loss (reflectance) of this component in dB, paired with reflectance_measurement.
+      - name: reflectance_measurement
+        type: OpticalMeasurement | tuple[OpticalMeasurement, ...] | None
+        description: Measurement record(s) the reflectance value(s) came from.
   Connector:
     label: Connector
     summary: Joined optical interface between components.
@@ -593,6 +590,18 @@ nodes:
       - name: description
         type: str
         description: Free-text description.
+      - name: loss_db
+        type: float | tuple[float, ...] | None
+        description: One-way transmission loss across this component in dB; multi-wavelength values are equal-length tuples paired with loss_measurement.
+      - name: loss_measurement
+        type: OpticalMeasurement | tuple[OpticalMeasurement, ...] | None
+        description: Measurement record(s) the loss value(s) came from; the record carries the wavelength and instrument settings.
+      - name: reflectance_db
+        type: float | tuple[float, ...] | None
+        description: Return loss (reflectance) of this component in dB, paired with reflectance_measurement.
+      - name: reflectance_measurement
+        type: OpticalMeasurement | tuple[OpticalMeasurement, ...] | None
+        description: Measurement record(s) the reflectance value(s) came from.
   Splice:
     label: Splice
     summary: Fused or mechanical splice between optical fiber segments.
@@ -612,6 +621,18 @@ nodes:
       - name: description
         type: str
         description: Free-text description.
+      - name: loss_db
+        type: float | tuple[float, ...] | None
+        description: One-way transmission loss across this component in dB; multi-wavelength values are equal-length tuples paired with loss_measurement.
+      - name: loss_measurement
+        type: OpticalMeasurement | tuple[OpticalMeasurement, ...] | None
+        description: Measurement record(s) the loss value(s) came from; the record carries the wavelength and instrument settings.
+      - name: reflectance_db
+        type: float | tuple[float, ...] | None
+        description: Return loss (reflectance) of this component in dB, paired with reflectance_measurement.
+      - name: reflectance_measurement
+        type: OpticalMeasurement | tuple[OpticalMeasurement, ...] | None
+        description: Measurement record(s) the reflectance value(s) came from.
   Terminator:
     label: Terminator
     summary: End condition of an optical path.
@@ -631,6 +652,18 @@ nodes:
       - name: description
         type: str
         description: Free-text description.
+      - name: loss_db
+        type: float | tuple[float, ...] | None
+        description: One-way transmission loss across this component in dB; multi-wavelength values are equal-length tuples paired with loss_measurement.
+      - name: loss_measurement
+        type: OpticalMeasurement | tuple[OpticalMeasurement, ...] | None
+        description: Measurement record(s) the loss value(s) came from; the record carries the wavelength and instrument settings.
+      - name: reflectance_db
+        type: float | tuple[float, ...] | None
+        description: Return loss (reflectance) of this component in dB, paired with reflectance_measurement.
+      - name: reflectance_measurement
+        type: OpticalMeasurement | tuple[OpticalMeasurement, ...] | None
+        description: Measurement record(s) the reflectance value(s) came from.
   Geo:
     label: Geometry
     display: Geometry

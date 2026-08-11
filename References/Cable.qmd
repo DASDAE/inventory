@@ -17,10 +17,8 @@ Cable containers are intentionally limited. A cable can be inside an enclosure o
 |---|---|---|
 | `resource_id` | str | Stable identifier for this shareable inventory resource. |
 | `name` | str | Human-readable cable name. |
-| `owner` | str | Proprietary owner of the cable. |
 | `manufacturer` | str | Manufacturer of the cable. |
 | `model` | str | Model name of the cable. |
-| `serial_number` | str | Manufacturer serial number for the cable. |
 | `diameter` | float \| None | Outer cable diameter in meters. |
 | `specification` | [ExternalResource](ExternalResource.qmd) \| None | External cable specification, datasheet, or product page. |
 | `container` | [Enclosure](Enclosure.qmd) \| [Cable](Cable.qmd) \| None | Optional containing physical asset, such as an enclosure, pipe, duct, or larger cable assembly. |

@@ -143,14 +143,12 @@ Each arm has two fiber cables and multiple empty pipes. The cables and pipe encl
 def arm_resources(arm):
     occ_cable = inv.Cable(
         name=f"NORFOX Arm {arm} OCC 4x G652 cable",
-        owner="NORSAR",
         manufacturer="OCC",
         model="4x G652",
         fiber_count=4,
     )
     ofs_cable = inv.Cable(
         name=f"NORFOX Arm {arm} OFS AcoustiSense cable",
-        owner="NORSAR",
         manufacturer="OFS",
         model="AcoustiSense",
         fiber_count=1,
@@ -300,7 +298,7 @@ for arm in ARMS:
         geometry=arm_geometries(arm),
         coupling=arm_couplings(arm),
         annotations=(arm_annotation(arm),),
-    ).validate()
+    ).check()
     fiber_arrays.append(
         inv.FiberArray(
             code=f"NFX{arm}",

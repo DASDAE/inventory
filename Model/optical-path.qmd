@@ -20,7 +20,7 @@ The tracks come in three kinds, and every track's rules follow from its kind. Op
 
 Interpolation between listed points is piecewise linear in the inventory CRS, so control points must be dense enough that linearity is faithful; where linear-in-degrees breaks down — near the antimeridian or poles, or over long sparse segments — declare a projected local CRS in the envelope. A coil, slack loop, or clump is a segment whose coordinates repeat while distance advances; every channel in it resolves to the coil's location. Vertical coordinates (`elevation`, `z`) are positive-up against the CRS vertical datum.
 
-Geometries act as piecewise segments: interpolation never crosses segments, and uncovered distance — surveyed boreholes separated by unmapped lead cable — is undefined, enriching as missing values. Loops that double back (a fiber running down and up the same borehole) are represented directly: optical distance keeps increasing while coordinates retrace. Segments may not overlap (`validate()` raises); a recalibration replaces the old segment — a correction.
+Geometries act as piecewise segments: interpolation never crosses segments, and uncovered distance — surveyed boreholes separated by unmapped lead cable — is undefined, enriching as missing values. Loops that double back (a fiber running down and up the same borehole) are represented directly: optical distance keeps increasing while coordinates retrace. Segments may not overlap (`check()` raises); a recalibration replaces the old segment — a correction.
 
 Geometry describes where the path is, not what optical material is present, so components, coordinates, and calibrations evolve independently.
 

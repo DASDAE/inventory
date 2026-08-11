@@ -86,7 +86,7 @@ inventory_v2 = inventory.replace(fiber_array, new_fiber_array)
 
 Intervals are half-open, so `break_time` itself belongs to the new epoch.
 
-Or through a convenience function that addresses the fiber array directly:
+A convenience function addressing the fiber array directly is *proposed* but not implemented; the explicit form above is how this is done today:
 
 ```python
 inventory_v2 = inventory.register_fiber_break(

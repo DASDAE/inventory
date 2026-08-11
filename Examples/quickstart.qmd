@@ -65,7 +65,7 @@ path = inv.OpticalPath(
     start_time="2026-06-01",
     optical_components=(sensing_fiber,),
     geometry=(geometry,),
-).validate()
+).check()
 
 inventory = inv.Inventory(
     networks=(

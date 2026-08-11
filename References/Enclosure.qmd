@@ -14,13 +14,10 @@ Physical housing, assembly, pipe, duct, conduit, or carrier resource for optical
 | `resource_id` | str | Stable identifier for this shareable inventory resource. |
 | `name` | str | Human-readable enclosure name. |
 | `enclosure_type` | str | Functional enclosure type, such as splice_box, junction_box, coupler, turnaround, patch_panel, protective_housing, conduit, pipe, duct, casing, borehole, or tray. |
-| `owner` | str | Proprietary owner of the enclosure. |
 | `material` | str | Enclosure material, such as steel, PVC, HDPE, concrete, or rock. |
 | `manufacturer` | str | Manufacturer of the enclosure. |
 | `model` | str | Model name of the enclosure. |
-| `serial_number` | str | Manufacturer serial number for the enclosure. |
 | `inner_diameter` | float \| None | Inner diameter in meters, when known. |
-| `outer_diameter` | float \| None | Outer diameter in meters, when known. |
 | `specification` | [ExternalResource](ExternalResource.qmd) \| None | External enclosure specification, datasheet, drawing, or product page. |
 | `description` | str | Free-text description. |
 

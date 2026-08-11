@@ -100,14 +100,12 @@ The inventory implementation generates unique internal IDs automatically.
 ```python
 telemetry_cable = inv.Cable(
     name="Telemetry lead-in cable",
-    owner="Example Operator",
     fiber_count=1,
     description="Armored patch lead-in cable from interrogator.",
 )
 
 sensing_cable = inv.Cable(
     name="Solifos BRUsens DAS AC3 cable",
-    owner="Example Operator",
     manufacturer="Solifos",
     model="BRUsens DAS AC3",
     fiber_count=4,
@@ -221,7 +219,7 @@ optical_path = inv.OpticalPath(
     geometry=(east_trench, north_trench, surface_run),
     coupling=(trenched, loose),
     annotations=(trenched_zone, loose_zone),
-).validate()
+).check()
 ```
 
 ### Inventory
