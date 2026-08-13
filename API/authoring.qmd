@@ -97,12 +97,12 @@ start_distance,end_distance,group,value
 
 Cells are text, so values parse by content: `true` and `false` become booleans, anything numeric becomes a number, and everything else stays a string. Every value in one group must parse to the same kind, and a group that mixes kinds raises naming the file and row. A value that is genuinely a string but looks like a boolean or a number is the one case the CSV spelling cannot express; author that group in YAML, where types are explicit.
 
-`optical_components.csv` holds a union of component types, so like any union container it carries a `type` column. It also carries a required `sequence` column, because components are placed by order: each starts where the previous ends. The loader orders rows by `sequence`, never row position, so re-sorting a spreadsheet is harmless; duplicate or non-increasing values raise. A filled cell in a column that does not pertain to the row's type is a row-level error:
+`optical_components.csv` holds a union of component types, so like any union container it carries a `type` column, whose value is the type's name exactly as an object file declares it — `FiberSegment`, not `fiber_segment`, so that one fact has one spelling wherever it is written. It also carries a required `sequence` column, because components are placed by order: each starts where the previous ends. The loader orders rows by `sequence`, never row position, so re-sorting a spreadsheet is harmless; duplicate or non-increasing values raise. A filled cell in a column that does not pertain to the row's type is a row-level error:
 
 ```csv
 sequence,type,optical_length,name,container,fiber_number,fiber_color
-1,fiber_segment,1000.0,fiber 1,cable_01,1,blue
-2,splice,0.1,splice 1,,,
+1,FiberSegment,1000.0,fiber 1,cable_01,1,blue
+2,Splice,0.1,splice 1,,,
 ```
 
 `geometry.csv` columns are named by the CRS `coordinate_labels` — `latitude,longitude,elevation` under the default CRS, or whatever the envelope declares for a local grid (this example's envelope declares `coordinate_labels: [x, y, elevation]`) — so the loader validates geometry against the declared frame. Its `segment` column groups rows into `Geometry` objects:
