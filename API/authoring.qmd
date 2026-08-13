@@ -3,6 +3,10 @@ title: "Authoring Inventories"
 sidebar: api
 ---
 
+::: {.callout-note}
+The object half of this page — the YAML and JSON files, their names, and the envelope — is implemented. The track CSVs and the optical path epoch directories which hold them are not yet, and are refused by name rather than ignored.
+:::
+
 The authoring format splits the inventory along its natural grain: long, row-shaped track data (optical components, geometry, coupling, annotations) live in CSV files that field crews can maintain as spreadsheets, while small heterogeneous objects (acquisitions, interrogators, cables) live in YAML or JSON files matching the pydantic models. A directory of these files is itself a loadable inventory — `dc.inventory("my_inventory/")` assembles and validates it directly, and `inventory.to_yaml()` exports the single-file interchange artifact for shipping next to a data archive.
 
 ## Directory Layout
@@ -42,8 +46,12 @@ The hierarchy is never built by nesting; it materializes from names, following t
 
 - A fiber array's name is its address: `DAS.L001/` (or `DAS.L001.yaml`, for an array with no row-shaped tracks yet) places array `L001` in network `DAS`. When the code is reused across epochs, the same `@` convention as everywhere else applies: `DAS.L001@2024-03-01/`.
 - An acquisition filename is its dotted `acquisition_key`: `DAS.L001.01.RAW.yaml`. When two epochs of the same acquisition would collide, the later file appends `@` and its start time: `DAS.L001.01.RAW@2024-06-01.yaml`. The suffix is a restated address: it must agree exactly with the in-file `start_time` (a date-only suffix means midnight UTC) or loading raises.
-- A resource filename is its `resource_id`: `cable_01.yaml`.
-- `networks/` is optional — only needed when the network itself has metadata worth recording. Networks mentioned by other addresses exist regardless.
+- A resource filename is its `resource_id`: `cable_01.yaml`. It is the whole name rather than a dotted address, so a resource id may itself contain dots.
+- `networks/` is optional — only needed when the network itself has metadata worth recording. An entity mentioned by another entity's address exists regardless: a network named only by a fiber array, and a fiber array named only by an acquisition, are as real as declared ones. One acquisition file is therefore a loadable inventory.
+
+Stations and networks carry epochs the same way, since they are time-ranged like everything else the directory addresses; the `@` convention is uniform across the four entity containers, and a resource, which has no validity interval, refuses it.
+
+Where an entity has more than one epoch, each child goes in the epoch effective when the child itself started. A child falling in none of its container's epochs is misfiled and one falling in several is ambiguous — including a child whose own start time is unset beside a container with more than one epoch — and both raise rather than pick one. Starting inside an epoch is not enough to belong to it: a child which stays valid past its container's epoch is reachable only before the boundary, since resolution after it selects the next epoch, which does not hold that child. Such a child raises, and is authored as one epoch per epoch it spans. Ending exactly where the container's epoch ends is a fit, both intervals being half-open.
 
 The full contract: **file declares type, container agrees, name ⇒ identity, envelope ⇒ version.** Every object file states what it is, its container must agree with that statement, its name determines which entity it is, and the top-level `inventory.yaml` versions the whole document.
 
@@ -158,7 +166,8 @@ The envelope itself is optional while authoring — a bare directory of fiber ar
 Loading is strict about near-misses and indifferent to clean misses — and because every object file declares its type, participation is decided by content, not by directory-name spelling:
 
 - Anything that claims to participate in a convention but gets it wrong raises: a `path@` directory with a malformed timestamp, a `type` field disagreeing with its container, a restated address disagreeing with a name, a geometry header disagreeing with the CRS labels, a CSV stem matching no attribute of the declared type, the same identity spelled as both a file and a directory, or an attribute stated both inline and as a CSV.
-- Identity is unique per container regardless of spelling: two names differing only by case raise (case-insensitive filesystems cannot hold both), and the same name with two extensions (`cable_01.yaml` and `cable_01.json`) raises as two spellings of one identity.
+- Identity is unique per container regardless of spelling: two names differing only by case raise (case-insensitive filesystems cannot hold both), and the same name with two extensions (`cable_01.yaml` and `cable_01.json`) raises as two spellings of one identity. Suffixes themselves are matched without regard to case, for the same reason: `DAS.L001.YAML` is the file `DAS.L001.yaml` would be, not a file to step over. Codes, by contrast, are case-sensitive wherever they are read, so `DAS` and `das` address different networks.
+- An object file inside an entity directory, which holds only its own `attrs` file and tracks, is a near-miss like any other: it belongs to a container, and is refused rather than dropped.
 - Structural column names — `type`, `sequence`, `segment`, `distance` — are reserved: a CRS whose `coordinate_labels` collide with them raises.
 - A YAML/JSON file that declares a model type inside an unrecognized container is a near-miss, not field notes: a typo like `aquisitions/` raises instead of silently loading an inventory with no acquisitions.
 - Anything that does not participate is ignored: `photos/`, `notes/`, deployment logs. Field material lives happily inside the inventory directory.
