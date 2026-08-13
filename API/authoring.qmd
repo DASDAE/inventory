@@ -4,7 +4,7 @@ sidebar: api
 ---
 
 ::: {.callout-note}
-The object half of this page — the YAML and JSON files, their names, and the envelope — is implemented. The track CSVs and the optical path epoch directories which hold them are not yet, and are refused by name rather than ignored.
+Everything this page describes is implemented.
 :::
 
 The authoring format splits the inventory along its natural grain: long, row-shaped track data (optical components, geometry, coupling, annotations) live in CSV files that field crews can maintain as spreadsheets, while small heterogeneous objects (acquisitions, interrogators, cables) live in YAML or JSON files matching the pydantic models. A directory of these files is itself a loadable inventory — `dc.inventory("my_inventory/")` assembles and validates it directly, and `inventory.to_yaml()` exports the single-file interchange artifact for shipping next to a data archive.
