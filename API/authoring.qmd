@@ -53,7 +53,7 @@ Stations and networks carry epochs the same way, since they are time-ranged like
 
 Where an entity has more than one epoch, each child goes in the epoch effective when the child itself started. A child falling in none of its container's epochs is misfiled and one falling in several is ambiguous — including a child whose own start time is unset beside a container with more than one epoch — and both raise rather than pick one. Starting inside an epoch is not enough to belong to it: a child which stays valid past its container's epoch is reachable only before the boundary, since resolution after it selects the next epoch, which does not hold that child. Such a child raises, and is authored as one epoch per epoch it spans. Ending exactly where the container's epoch ends is a fit, both intervals being half-open.
 
-The full contract: **file declares type, container agrees, name ⇒ identity, envelope ⇒ version.** Every object file states what it is, its container must agree with that statement, its name determines which entity it is, and the top-level `inventory.yaml` versions the whole document.
+The full contract: **file declares object_type, container agrees, name ⇒ identity, envelope ⇒ version.** Every object file states what it is, its container must agree with that statement, its name determines which entity it is, and the top-level `inventory.yaml` versions the whole document.
 
 Addresses may be restated inside files (e.g., codes in `attrs.yaml`), but a restated address must agree with the name or loading raises. There is never a precedence rule between two spellings of the same fact.
 
@@ -61,7 +61,7 @@ Addresses may be restated inside files (e.g., codes in `attrs.yaml`), but a rest
 
 Object files follow the pydantic models. YAML and JSON are interchangeable — they share one data model, so `.yaml`, `.yml`, and `.json` are accepted identically.
 
-Every object file carries a `type` field naming its model — `type: Acquisition`, `type: Cable`, `type: FiberArray` in an `attrs.yaml`. The container is never the source of the type; it is a check on it: a `type: Acquisition` file inside `fiber_arrays/` fails as "wrong container", and a model-declaring file inside an unrecognized directory is a near-miss (see [Loading Rules](#loading-rules)). The envelope declares `type: Inventory` under the same rule.
+Every object file carries an `object_type` field naming its model — `object_type: Acquisition`, `object_type: Cable`, `object_type: FiberArray` in an `attrs.yaml`. The container is never the source of the type; it is a check on it: an `object_type: Acquisition` file inside `fiber_arrays/` fails as "wrong container", and a model-declaring file inside an unrecognized directory is a near-miss (see [Loading Rules](#loading-rules)). The envelope declares `object_type: Inventory` under the same rule.
 
 **An entity is a file until it needs row-shaped tracks, then it is a directory.** A pathless fiber array can be `fiber_arrays/DAS.L001.yaml`; once it grows an optical path it becomes the directory form — `attrs.yaml` plus track files. An acquisition with a large channel map graduates the same way: `acquisitions/DAS.L001.02.DEC/` holding `attrs.yaml` and `distance_map.csv`. The two forms are spellings of the same identity, so both present at once raises, and an attribute stated inline in `attrs.yaml` *and* as a CSV in the same directory raises.
 
@@ -97,10 +97,10 @@ start_distance,end_distance,group,value
 
 Cells are text, so values parse by content: `true` and `false` become booleans, anything numeric becomes a number, and everything else stays a string. Every value in one group must parse to the same kind, and a group that mixes kinds raises naming the file and row. A value that is genuinely a string but looks like a boolean or a number is the one case the CSV spelling cannot express; author that group in YAML, where types are explicit.
 
-`optical_components.csv` holds a union of component types, so like any union container it carries a `type` column, whose value is the type's name exactly as an object file declares it — `FiberSegment`, not `fiber_segment`, so that one fact has one spelling wherever it is written. It also carries a required `sequence` column, because components are placed by order: each starts where the previous ends. The loader orders rows by `sequence`, never row position, so re-sorting a spreadsheet is harmless; duplicate or non-increasing values raise. A filled cell in a column that does not pertain to the row's type is a row-level error:
+`optical_components.csv` holds a union of component types, so like any union container it carries an `object_type` column, whose value is the type's name exactly as an object file declares it — `FiberSegment`, not `fiber_segment`, so that one fact has one spelling wherever it is written. It also carries a required `sequence` column, because components are placed by order: each starts where the previous ends. The loader orders rows by `sequence`, never row position, so re-sorting a spreadsheet is harmless; duplicate or non-increasing values raise. A filled cell in a column that does not pertain to the row's type is a row-level error:
 
 ```csv
-sequence,type,optical_length,name,container,fiber_number,fiber_color
+sequence,object_type,optical_length,name,container,fiber_number,fiber_color
 1,FiberSegment,1000.0,fiber 1,cable_01,1,blue
 2,Splice,0.1,splice 1,,,
 ```
@@ -139,13 +139,13 @@ An empty cell means unset, never an empty string. The one blank-meaningful code,
 
 ## Optical Path Epochs
 
-Each `path*/` directory under a fiber array is one `OpticalPath` epoch — an entity directory like any other: an `attrs.yaml` declaring `type: OpticalPath` (with `name`, OTDR references, and a description), plus its four track CSVs.
+Each `path*/` directory under a fiber array is one `OpticalPath` epoch — an entity directory like any other: an `attrs.yaml` declaring `object_type: OpticalPath` (with `name`, OTDR references, and a description), plus its four track CSVs.
 
 - The bare `path/` directory is the first epoch, starting when the fiber array starts.
 - Each later epoch is a sibling directory named `path@` plus its start time: `path@2024-05-12T103000/`.
 - A non-blank location code joins the stem with a dot: `path.00/`, `path.00@2024-05-12T103000/`. The bare stem is the blank location, and each location code is its own epoch lineage.
 
-`path` is the one reserved container stem: unlike attribute CSVs, these directories are not serializing an attribute — they address a child entity whose name carries its epoch. The declared type must still agree with the container: `type: Acquisition` inside a `path*/` directory raises.
+`path` is the one reserved container stem: unlike attribute CSVs, these directories are not serializing an attribute — they address a child entity whose name carries its epoch. The declared type must still agree with the container: `object_type: Acquisition` inside a `path*/` directory raises.
 
 Within one location's lineage, epochs are non-overlapping by construction: sorted by start time, each epoch implicitly ends where the next begins, and the last is ongoing. Recording a fiber break is additive: create the new epoch directory; the old one is untouched. An epoch's `attrs.yaml` may state an explicit earlier `end_time` — a dark interval or retired lineage — which must not exceed the next epoch's start (overlap raises).
 
@@ -157,7 +157,7 @@ Timestamps in names use ISO 8601 basic format for the time portion (`2024-05-12T
 
 ## The Envelope
 
-`inventory.yaml` declares `type: Inventory` and holds only the document-level singleton fields — `schema_version`, `resource_id`, `creation_info`, and `coordinate_reference_system` — never the collections, which live in the directory structure. The CRS is implicit by default (the standard geographic CRS, per the model); declare it in the envelope only to override it for exceptional frames such as mines or laboratories. Singletons never get their own file.
+`inventory.yaml` declares `object_type: Inventory` and holds only the document-level singleton fields — `schema_version`, `resource_id`, `creation_info`, and `coordinate_reference_system` — never the collections, which live in the directory structure. The CRS is implicit by default (the standard geographic CRS, per the model); declare it in the envelope only to override it for exceptional frames such as mines or laboratories. Singletons never get their own file.
 
 The envelope itself is optional while authoring — a bare directory of fiber arrays and acquisitions loads with defaults — but `to_yaml()` always writes a fully explicit envelope.
 
@@ -165,10 +165,10 @@ The envelope itself is optional while authoring — a bare directory of fiber ar
 
 Loading is strict about near-misses and indifferent to clean misses — and because every object file declares its type, participation is decided by content, not by directory-name spelling:
 
-- Anything that claims to participate in a convention but gets it wrong raises: a `path@` directory with a malformed timestamp, a `type` field disagreeing with its container, a restated address disagreeing with a name, a geometry header disagreeing with the CRS labels, a CSV stem matching no attribute of the declared type, the same identity spelled as both a file and a directory, or an attribute stated both inline and as a CSV.
+- Anything that claims to participate in a convention but gets it wrong raises: a `path@` directory with a malformed timestamp, an `object_type` field disagreeing with its container, a restated address disagreeing with a name, a geometry header disagreeing with the CRS labels, a CSV stem matching no attribute of the declared type, the same identity spelled as both a file and a directory, or an attribute stated both inline and as a CSV.
 - Identity is unique per container regardless of spelling: two names differing only by case raise (case-insensitive filesystems cannot hold both), and the same name with two extensions (`cable_01.yaml` and `cable_01.json`) raises as two spellings of one identity. Suffixes themselves are matched without regard to case, for the same reason: `DAS.L001.YAML` is the file `DAS.L001.yaml` would be, not a file to step over. Codes, by contrast, are case-sensitive wherever they are read, so `DAS` and `das` address different networks.
 - An object file inside an entity directory, which holds only its own `attrs` file and tracks, is a near-miss like any other: it belongs to a container, and is refused rather than dropped.
-- Structural column names — `type`, `sequence`, `segment`, `distance` — are reserved: a CRS whose `coordinate_labels` collide with them raises.
+- Structural column names — `object_type`, `sequence`, `segment`, `distance` — are reserved: a CRS whose `coordinate_labels` collide with them raises.
 - A YAML/JSON file that declares a model type inside an unrecognized container is a near-miss, not field notes: a typo like `aquisitions/` raises instead of silently loading an inventory with no acquisitions.
 - Anything that does not participate is ignored: `photos/`, `notes/`, deployment logs. Field material lives happily inside the inventory directory.
 
